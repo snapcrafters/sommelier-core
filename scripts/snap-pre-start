@@ -1,0 +1,2 @@
+#!/bin/sh
+# do not use `exec` in this file.

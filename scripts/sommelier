@@ -1,0 +1,412 @@
+#!/bin/bash
+
+if [ "${STRICT_SOMMELIER:-}" == "1" ]; then
+  # set -e
+  set -u
+fi
+
+if [ "${DEBUG_SOMMELIER:-}" == "1" ]; then
+  set -x
+fi
+
+if [ "$SNAP_ARCH" != "amd64" ]; then
+  echo "ERROR: Host architecture ($SNAP_ARCH) unsupported."
+  exit 1
+fi
+
+# ensure_dir_exists calls `mkdir -p` if the given path is not a directory.
+# This speeds up execution time by avoiding unnecessary calls to mkdir.
+#
+# Usage: ensure_dir_exists <path> [<mkdir-options>]...
+#
+function ensure_dir_exists() {
+  [ -d "$1" ] ||  mkdir -p "$@"
+}
+
+[ -z "${SNAP_TITLE:-}" ] && SNAP_TITLE="${SNAP_NAME}"
+NOTICE="The ${SNAP_TITLE} snap uses Wine to run Windows applications and may not function as expected."
+if [ -n "${SNAP_SUPPORT_URL:-}" ]; then
+  SUPPORT_TEXT="If you encounter issues please report them on the ${SNAP_TITLE} snap issue tracker:\\n\\n${SNAP_SUPPORT_URL}"
+else
+  SUPPORT_TEXT="If you encounter issues please report them to the snap author. You can find contact information by running \`snap info ${SNAP_NAME}\` in a terminal."
+fi
+NOTICE="$NOTICE\\n$SUPPORT_TEXT"
+
+# https://stackoverflow.com/questions/4023830/how-to-compare-two-strings-in-dot-separated-version-format-in-bash
+vercomp() {
+    if [[ $1 == $2 ]]
+    then
+        return 1
+    fi
+    local IFS=.
+    local i ver1=($1) ver2=($2)
+    # fill empty fields in ver1 with zeros
+    for ((i=${#ver1[@]}; i<${#ver2[@]}; i++))
+    do
+        ver1[i]=0
+    done
+    for ((i=0; i<${#ver1[@]}; i++))
+    do
+        if [[ -z ${ver2[i]:-} ]]
+        then
+            # fill empty fields in ver2 with zeros
+            ver2[i]=0
+        fi
+        if ((10#${ver1[i]} < 10#${ver2[i]}))
+        then
+            return 0
+        fi
+    done
+    return 1
+}
+
+function install_app() {
+  if [ -f "$SNAP/bin/snap-pre-install" ]; then
+    . "$SNAP/bin/snap-pre-install"
+  fi
+
+  # Install additional requirements via winetricks here
+  if [ -n "${TRICKS:-}" ]; then
+    for TRICK in ${TRICKS}; do
+      "${WINETRICKS}" --unattended prefix="$WINEPREFIX" "${TRICK}" | \
+      yad --progress --title="Installing ${TRICK}" --progress-text= --width=400 --center --no-buttons --auto-close --auto-kill --on-top --pulsate
+    done
+  fi
+
+  # Modify or remove this as required by your application.
+  if [ -n "${INSTALL_URL:-}" ]; then
+    # Downloads a file with progress using wget and yad
+    wget "${INSTALL_URL}" -O "${TMPDIR}/${INSTALL_EXE}" 2>&1 | \
+    perl -p -e '$| = 1; s/^.* +([0-9]+%) +([0-9,.]+[GMKB]) +([0-9hms,.]+).*$/\1\n# Downloading... \2 (\3)/' | \
+    yad --progress --title="${INSTALL_EXE}" --width=400 --center --no-buttons --auto-close --auto-kill --on-top --no-escape
+
+    LOCAL_INSTALL_EXE="${TMPDIR}/${INSTALL_EXE}"
+  elif [ -n "${INSTALL_EXE:-}" ]; then
+    LOCAL_INSTALL_EXE="${INSTALL_EXE}"
+  fi
+
+  # Installs the wine application
+  "${WINELOADER}" "${LOCAL_INSTALL_EXE}" "${INSTALL_FLAGS:-}"
+
+  if [ -n "${INSTALL_URL:-}" ]; then
+    # Removes the cached installer
+    rm -v "${TMPDIR}/${INSTALL_EXE}"
+  fi
+
+  if [ -f "$SNAP/bin/snap-post-install" ]; then
+    . "$SNAP/bin/snap-post-install"
+  fi
+
+  if [ -f "$SNAP/version" ]; then
+    cp "$SNAP/version" "$SNAP_USER_COMMON/version"
+  fi
+}
+
+function launch_app() {
+  if [ -f "$SNAP/bin/snap-pre-start" ]; then
+    . "$SNAP/bin/snap-pre-start"
+  fi
+
+  "${WINELOADER}" start /wait /unix "${RUN_EXE}" "${ACTION_ARGS[@]}"
+
+  local exit_code="$?"
+
+  if [ -f "$SNAP/bin/snap-post-stop" ]; then
+    . "$SNAP/bin/snap-post-stop"
+  fi
+
+  exit $exit_code
+}
+
+function prepend_dir() {
+  local var="$1"
+  local dir="$2"
+  local LIB="\$LIB"
+  eval "export $var=\"\$dir\${$var:+:\$$var}\""
+}
+
+function append_dir() {
+  local var="$1"
+  local dir="$2"
+  local LIB="\$LIB"
+  eval "export $var=\"\${$var:+\$$var:}\$dir\""
+}
+
+if [ -z "${WINEDEBUG:-}" ]; then
+  export WINEDEBUG="-all"
+fi
+
+if [ -z "${DXVK_LOG_LEVEL:-}" ]; then
+  export DXVK_LOG_LEVEL="none"
+fi
+
+append_dir PATH "$SNAP/bin"
+append_dir PATH "$SNAP/usr/bin"
+
+# If we've been given and installer URL derive the filename
+if [ -n "${INSTALL_URL:-}" ]; then
+  INSTALL_EXE="$(basename "${INSTALL_URL}")"
+fi
+
+if [ -n "${DLLOVERRIDES:-}" ]; then
+  export WINEDLLOVERRIDES="${DLLOVERRIDES}"
+fi
+
+
+###########################
+# Wine platform selection #
+###########################
+
+if [ -d "$SNAP/wine-platform" ]; then
+  WINE_RELEASE="$(
+      grep \
+            --extended-regexp \
+            'default-provider: *wine-platform-[[:digit:]]' \
+            $SNAP/meta/snap.yaml \
+            | cut --delimiter=: --fields=2 \
+            | sed 's/^ *//;s|-| |g' \
+            | awk '{print $4}'
+  )"
+  WINE_BASEDIR="$SNAP/wine-platform/wine-$WINE_RELEASE"
+
+  if [ ! -d "$WINE_BASEDIR" ]; then
+    platform_snap_name="$(
+        grep \
+            --extended-regexp \
+            'default-provider: *wine-platform-[[:digit:]]' \
+            $SNAP/meta/snap.yaml \
+            | cut --delimiter=: --fields=2 \
+            | sed 's/^ *//' \
+            || true
+    )"
+
+    if test -n "${platform_snap_name:-}"; then
+        echo "ERROR: You need to connect this snap to the wine platform snap."
+        echo ""
+        echo "You can do this with those commands:"
+        echo "snap install ${platform_snap_name}"
+        echo "snap connect $SNAP_NAME:$(echo $platform_snap_name | sed 's|-platform||g') ${platform_snap_name}"
+        echo ""
+        exit 1
+    else
+        echo "ERROR: This snap is broken. Please contact the publisher."
+        echo ""
+        echo "The snap contains a `wine-platform` folder, but no plugs to the wine platform"
+        echo "Please add the plugs to the wine platform or remove the `wine-platform` folder"
+        echo ""
+        exit 1
+    fi
+  fi
+elif [ -x "$SNAP/bin/wine" ]; then
+  WINE_BASEDIR="$SNAP"
+elif [ -x "$SNAP/usr/bin/wine" ]; then
+  WINE_BASEDIR="$SNAP/usr"
+elif [ -d "$SNAP/opt/wine" ]; then
+  WINE_BASEDIR="$SNAP/opt/wine"
+elif [ -d "$SNAP/opt/wine-devel" ]; then
+  WINE_BASEDIR="$SNAP/opt/wine-devel"
+elif [ -d "$SNAP/opt/wine-stable" ]; then
+  WINE_BASEDIR="$SNAP/opt/wine-stable"
+else
+  echo "ERROR: This snap is broken. Please contact the publisher."
+  echo ""
+  echo "The snap does not contain a wine installation and is not connected to wine-platform snap."
+  echo ""
+  exit 1
+fi
+
+if [ "${FORCE_WIN32:-}" = "true" ]; then
+    export WINE="wine"
+    export WINEARCH="win32"
+    export WINELOADER="$WINE_BASEDIR/bin/wine"
+    export WINEDLLPATH="$WINE_BASEDIR/lib/wine/fakedlls"
+else
+    export WINE="wine64"
+    export WINEARCH="win64"
+    export WINELOADER="$WINE_BASEDIR/bin/wine64"
+    export WINEDLLPATH="$WINE_BASEDIR/lib64/wine/fakedlls"
+fi
+
+###########################
+# Wine runtime selection #
+###########################
+
+if [ -d "$SNAP/wine-runtime" ]; then
+  WINE_PLATFORM_RUNTIME="$SNAP/wine-runtime"
+  if [ ! -f "$WINE_PLATFORM_RUNTIME/bin/wprfile" ]; then
+    runtime_snap_name="$(
+        grep \
+            --extended-regexp \
+            'default-provider: *wine-platform-runtime' \
+            $SNAP/meta/snap.yaml \
+            | cut --delimiter=: --fields=2 \
+            | sed 's/^ *//' \
+            || true
+    )"
+
+    if test -n "${runtime_snap_name:-}"; then
+        echo "ERROR: You need to connect this snap to the wine runtime snap."
+        echo ""
+        echo "You can do this with those commands:"
+        echo "snap install ${runtime_snap_name}"
+        echo "snap connect $SNAP_NAME:$(echo $runtime_snap_name | sed 's|-platform||g') ${runtime_snap_name}"
+        echo ""
+        exit 1
+    else
+        echo "ERROR: This snap is broken. Please contact the publisher."
+        echo ""
+        echo "The snap contains a `wine-runtime` folder, but no plugs to the wine runtime"
+        echo "Please add the plugs to the wine runtime or remove the `wine-runtime` folder"
+        echo ""
+        exit 1
+    fi
+  fi
+
+  export WINETRICKS="$WINE_PLATFORM_RUNTIME/bin/winetricks"
+  export LD_LIBRARY_PATH="$WINE_PLATFORM_RUNTIME/lib:$WINE_PLATFORM_RUNTIME/\$LIB:$WINE_PLATFORM_RUNTIME/usr/lib:$WINE_PLATFORM_RUNTIME/usr/\$LIB:$LD_LIBRARY_PATH"
+  export PATH="$PATH:$WINE_PLATFORM_RUNTIME/bin:$WINE_PLATFORM_RUNTIME/usr/bin:$WINE_BASEDIR/bin"
+
+  append_dir LD_LIBRARY_PATH "$WINE_PLATFORM_RUNTIME/lib64"
+  append_dir LD_LIBRARY_PATH "$WINE_PLATFORM_RUNTIME/\$LIB"
+  append_dir LD_LIBRARY_PATH "$WINE_PLATFORM_RUNTIME/usr/\$LIB"
+  append_dir LD_LIBRARY_PATH "$WINE_PLATFORM_RUNTIME/usr/\$LIB"
+
+
+  # SAMBA Libs for ntlm_auth to function
+  append_dir LD_LIBRARY_PATH "$WINE_PLATFORM_RUNTIME/usr/\$LIB/samba"
+  append_dir LD_LIBRARY_PATH "$WINE_PLATFORM_RUNTIME/usr/\$LIB/samba"
+else
+  export WINETRICKS="$SNAP/bin/winetricks"
+fi
+
+export WINEPREFIX="$SNAP_USER_COMMON/.wine"
+export WINETRICKS_LATEST_VERSION_CHECK="disabled"
+export wine="$WINE_BASEDIR/bin/wine"  # for dxvk installer
+export DXVK_CONFIG_FILE="$SNAP_USER_COMMON/dxvk.conf"
+
+append_dir PATH "$WINE_BASEDIR/bin"
+
+append_dir LD_LIBRARY_PATH "$WINE_BASEDIR/lib"
+append_dir LD_LIBRARY_PATH "$WINE_BASEDIR/lib64"
+
+append_dir LD_LIBRARY_PATH "$SNAP/lib"
+append_dir LD_LIBRARY_PATH "$SNAP/\$LIB"
+append_dir LD_LIBRARY_PATH "$SNAP/usr/lib"
+append_dir LD_LIBRARY_PATH "$SNAP/usr/\$LIB"
+append_dir LD_LIBRARY_PATH "/lib"
+append_dir LD_LIBRARY_PATH "/\$LIB"
+append_dir LD_LIBRARY_PATH "/usr/lib"
+append_dir LD_LIBRARY_PATH "/usr/\$LIB"
+append_dir LD_LIBRARY_PATH "$SNAP/usr/\$LIB/samba"
+
+# Don't Stop wine from updating $WINEPREFIX automatically
+if [ -f "${WINEPREFIX}/.update-timestamp" ]; then
+  chkstmp="$(grep -c disable "${WINEPREFIX}/.update-timestamp")"
+  if [ "$chkstmp" -eq 1 ]; then
+    # echo "disable" > "${WINEPREFIX}/.update-timestamp"
+    rm "${WINEPREFIX}/.update-timestamp"
+  fi
+fi
+
+# Initialise wine
+if [ ! -f "${WINEPREFIX}/drive_c/windows/system.ini" ]; then
+  # Create the WINE environment
+  "${WINELOADER}" wineboot --init 2>&1 | \
+  yad --progress --title="Preparing Windows environment" --progress-text= --width=400 --center --no-buttons --auto-close --auto-kill --pulsate
+  # Opt out of winetricks metrics - we ninja this to avoid dialogs
+  if [ ! -f "${XDG_CACHE_HOME}/winetricks/track_usage" ]; then
+    mkdir -p "${XDG_CACHE_HOME}/winetricks"
+    echo 0 > "${XDG_CACHE_HOME}/winetricks/track_usage"
+  fi
+else
+  # Notification
+  notify-send --icon "${SNAP_ICON}" --expire-time=15000 "${SNAP_TITLE}" "${NOTICE}"
+fi
+
+
+##############
+# Tweak Wine #
+##############
+
+# link ttf & ttc fonts from root to wineprefix
+ensure_dir_exists "$WINEPREFIX/drive_c/windows/Fonts"
+find /usr/share/fonts/ -type f \( -name "*.ttf" -o -name "*.ttc" \) -exec ln -vs "{}" "$WINEPREFIX/drive_c/windows/Fonts/" \; &>/dev/null
+
+# Install the ReactOS Modern theme
+ensure_dir_exists "$WINEPREFIX/drive_c/windows/Resources/Themes/modern"
+cp -r "$SNAP/themes/"* "$WINEPREFIX/drive_c/windows/Resources/Themes"
+# Set ReactOS Modern theme as default
+"$WINELOADER" regedit "$SNAP/themes/modern/modern.reg"
+sleep 1
+
+# Better support for Chinese fonts.
+progHome="$SNAP_USER_DATA/photoscape"
+ensure_dir_exists "$progHome"
+progReg="$progHome/cjk.reg"
+# Check for LANG=zh_* in locale and apply font changes if it exists.
+if (locale | grep -e 'LANG=zh_CN' -e 'LANG=zh_SG') >/dev/null 2>&1; then cat > $progReg <<'EOF'
+Windows Registry Editor Version 5.00
+[HKEY_LOCAL_MACHINE\Software\Microsoft\Windows NT\CurrentVersion\FontSubstitutes]
+"MS Shell Dlg"="Noto Sans CJK SC Regular"
+"Tms Rmn"="Noto Sans CJK SC Regular"
+EOF
+"$WINELOADER" regedit $progReg
+sleep 1
+rm $progReg &>/dev/null
+elif (locale | grep -e 'LANG=zh_HK' -e 'LANG=zh_MO' -e 'LANG=zh_TW') >/dev/null 2>&1; then cat > $progReg <<'EOF'
+Windows Registry Editor Version 5.00
+[HKEY_LOCAL_MACHINE\Software\Microsoft\Windows NT\CurrentVersion\FontSubstitutes]
+"MS Shell Dlg"="Noto Sans CJK TC Regular"
+"Tms Rmn"="Noto Sans CJK TC Regular"
+EOF
+"$WINELOADER" regedit $progReg
+sleep 1
+rm $progReg &>/dev/null
+fi
+
+
+#####################################
+# Actually run the requested action #
+#####################################
+
+
+# Get the action we're asked to run
+if [ -n "${1:-}" ]; then
+  ACTION="${1}"
+  shift
+  ACTION_ARGS=( "$@" )
+else
+  echo "ERROR: I need an action as first argument. Exiting here."
+  exit 1
+fi
+
+# Launch the requested program.
+if [[ "$ACTION" = "winetricks" ]]; then
+  "$WINETRICKS" prefix="$WINEPREFIX" "${ACTION_ARGS[@]}"
+elif [[ "$ACTION" = "winedbg" ]]; then
+  "$ACTION" "${ACTION_ARGS[@]}"  
+elif [[ "$ACTION" = "run-exe" ]]; then
+  # Check if we know which executable to run. 
+  # Note: RUN_EXE is provided as an environment variable instead of a CLI
+  # parameter so that snaps using command-chain can specify an executable
+  # with a space in the path without having to use a wrapper script.
+  if [[ -z "${RUN_EXE:-}" ]]; then
+    echo "ERROR: No executable provided. Please provide the path to the executable using the RUN_EXE environment variable."
+    exit 1
+  fi
+
+  # Turn relative path to executable into an absolute path.
+  if [[ "$RUN_EXE" == "/Program Files"* ]]; then
+    RUN_EXE="${WINEPREFIX}/drive_c${RUN_EXE}"
+  fi
+
+  # Install if the executable doesn't exist or the version changed.
+  if [ -f "$SNAP/version" ] && vercomp "$(cat "$SNAP_USER_COMMON/version" 2>/dev/null)" "$(cat "$SNAP/version" 2>/dev/null)" || [ ! -e "$RUN_EXE" ]; then
+    install_app
+  fi
+
+  # Run the application
+  launch_app
+else
+  "$WINELOADER" "$ACTION" "${ACTION_ARGS[@]}"
+fi

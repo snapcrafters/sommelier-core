@@ -1,0 +1,5 @@
+#!/bin/sh
+# do not use `exec` in this file.
+
+# Uncomment the following to automatically install dxvk
+# "$SNAP/dxvk/setup_dxvk.sh" install --without-dxgi
