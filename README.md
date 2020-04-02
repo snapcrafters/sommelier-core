@@ -1,5 +1,7 @@
 # Sommelier Core Scripts
 
+> WARNING: sommelier-core is not stable at the moment, it might break backwards compatibility. Use at your own risk!
+
 This repository contains scripts to help you put a Windows application in a snap. The goal is to create a single `sommelier` script which can be used by every snapped Wine application. Is this script not working for your application? Please let me know! Contributions are welcome!
 
 Features:
@@ -9,6 +11,9 @@ Features:
 * Includes the "Modern" theme from ReactOS.
 * Supports Chinese locales.
 * Supports running arbitrary applications inside the snap environment using the `myapp.wine64` command.
+* Reinstalls the Windows app every time the snap `version` changes.
+* Updates the wine prefix every time wine changes.
+* Re-runs initialization logic every time the snap `revision` changes.  
 
 Notes:
 
