@@ -47,6 +47,8 @@ append_dir() {
 #######################
 
 init_wine() {
+  echo "Initialising Wine.."
+
   if [[ -n "${FORCE_WIN32:-}" ]] && grep "arch=win32" "$WINEPREFIX/system.reg" ; then
       echo "WARNING: Old Wine prefix is win32, but FORCE_WIN32 is not set. Removing old Wine prefix and generating a win64 one."
       rm -rf "$WINEPREFIX"
@@ -98,6 +100,8 @@ EOF
 }
 
 install_app() {
+  echo "Installing application.."
+
   if [[ -f "$SNAP/bin/snap-pre-install" ]]; then
     . "$SNAP/bin/snap-pre-install"
   fi
@@ -138,6 +142,8 @@ install_app() {
 }
 
 launch_app() {
+  echo "Launching application.."
+
   if [[ -f "$SNAP/bin/snap-pre-start" ]]; then
     . "$SNAP/bin/snap-pre-start"
   fi
