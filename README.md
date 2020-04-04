@@ -25,15 +25,30 @@ See the [Photoscape Snap](https://github.com/snapcrafters/photoscape) for a comp
 
 Environment variables are used to configure sommelier.
 
+### General use
+
+* `TRICKS`: A space-separated list of [winetricks](https://wiki.winehq.org/Winetricks) to run before installing the application. For example, the trick `dxvk` installs and configures the Vulkan-based translation layer for Direct3D 9/10/11.
+* `INSTALL_URL`: URL to publicly available installer. Sommelier will download this installer and execute it in Wine.
+  
+  > Note: if the installer is not publicly downloadable, you can alternatively include the installer in the snap and use the `INSTALL_EXE` environment variable to specify the absolute path to the installation exe. Using `INSTALL_URL` is preferred, however, because many installers have licenses that prevent third-party distribution. Example: `INSTALL_PATH: "$SNAP/PhotoScapeSetup_V3.7.exe"`
+* `INSTALL_FLAGS`: Windows-style CLI flags to pass to the installer. Many installers have CLI flags for silent installation, for example.
+* `WINEDLLOVERRIDES`: Override DLL loading behavior: configure Wine to choose between native and builtin DLLs. See [DLL Overrides](https://wiki.winehq.org/Wine_User%27s_Guide#DLL_Overrides) and [WINEDLLOVERRIDES](https://wiki.winehq.org/Wine_User%27s_Guide#WINEDLLOVERRIDES.3DDLL_Overrides) docs for more information. Example: `"mscoree,mshtml="`
+* `WINEESYNC`: set to `1` to enable esync. This can increase performance for some games, especially ones that rely heavily on the CPU. See [esync docs](https://github.com/zfigura/wine/blob/esync/README.esync) for more information.
+* `FORCE_WIN32`: All applications are run using `wine64` by default, which can run both 32-bit and 64-bit Windows binaries. Some 32-bit applications, however, have issues when you run them using `wine64`. For these applications, set `FORCE_WIN32` to `1` to force sommelier to use a 32-bit prefix.
+
+### Development and debugging
+
+* `SNAP_SOMMELIER_DEBUG`: Enable bash tracing for the sommelier script and time how long sommelier runs before starting the application.
+* `SNAP_SOMMELIER_STRICT`: Make sommelier exit when an unset variable is used. This might be useful to find bugs in sommelier.
+
+### Example
+
 ```yaml
 environment:
   INSTALL_EXE: "$SNAP/PhotoScapeSetup_V3.7.exe"
   INSTALL_FLAGS: "/S"
-  DLLOVERRIDES: "mscoree,mshtml="         # Prevent pop-ups about Wine Mono and Wine Gecko
-  SNAP_TITLE: "$SNAPCRAFT_PROJECT_SUMMARY"
-  SNAP_ICON: "$SNAP/meta/gui/icon.png"
-  SNAP_SUPPORT_URL: "https://github.com/snapcrafters/photoscape/issues"
-  STRICT_SOMMELIER: "1"  # Make Sommelier exit when unset variable is used. (useful to find bugs)
+  DLLOVERRIDES: "mscoree,mshtml="   # Prevent pop-ups about Wine Mono and Wine Gecko
+  STRICT_SOMMELIER: "1"             # Make Sommelier exit when unset variable is used. (useful to find bugs)
 ```
 
 The `run-exe` command tells sommelier to run the exe from the `RUN_EXE` environment variable. It's also useful to include the `wine64` and the `winetricks` commands so users you can run winecfg and winetricks to change wine.

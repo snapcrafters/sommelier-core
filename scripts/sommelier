@@ -51,7 +51,7 @@ init_wine() {
 
   if [[ -n "${FORCE_WIN32:-}" ]] && grep "arch=win32" "$WINEPREFIX/system.reg" ; then
       echo "WARNING: Old Wine prefix is win32, but FORCE_WIN32 is not set. Removing old Wine prefix and generating a win64 one."
-      rm -rf "$WINEPREFIX"
+      mv "$WINEPREFIX" "${WINEPREFIX}.bak-$(date +%s)"
   fi
 
   # Create the Wineprefix
@@ -168,22 +168,10 @@ if [[ -z "${WINEDEBUG:-}" ]]; then
   export WINEDEBUG="-all"
 fi
 
-if [[ -z "${DXVK_LOG_LEVEL:-}" ]]; then
-  export DXVK_LOG_LEVEL="none"
-fi
-
-append_dir PATH "$SNAP/bin"
-append_dir PATH "$SNAP/usr/bin"
-
 # If we've been given and installer URL derive the filename
 if [[ -n "${INSTALL_URL:-}" ]]; then
   INSTALL_EXE="$(basename "${INSTALL_URL}")"
 fi
-
-if [[ -n "${DLLOVERRIDES:-}" ]]; then
-  export WINEDLLOVERRIDES="${DLLOVERRIDES}"
-fi
-
 
 ###########################
 # Wine platform selection #
@@ -198,9 +186,9 @@ WINE_RELEASE="$(
     | sed 's/^ *//;s|-| |g' \
     | awk '{print $4}'
 )"
-WINE_BASEDIR="$SNAP/wine-platform/wine-$WINE_RELEASE"
+WINE_PLATFORM="$SNAP/wine-platform/wine-$WINE_RELEASE"
 
-if [[ ! -d "$WINE_BASEDIR" ]]; then
+if [[ ! -d "$WINE_PLATFORM" ]]; then
   platform_snap_name="$(
     grep \
       --extended-regexp \
@@ -232,14 +220,20 @@ fi
 if [[ -n "${FORCE_WIN32:-}" ]]; then
   export WINE="wine"
   export WINEARCH="win32"
-  export WINELOADER="$WINE_BASEDIR/bin/wine"
-  export WINEDLLPATH="$WINE_BASEDIR/lib/wine/fakedlls"
+  export WINELOADER="$WINE_PLATFORM/bin/wine"
+  export WINEDLLPATH="$WINE_PLATFORM/lib/wine/fakedlls"
 else
   export WINE="wine64"
   export WINEARCH="win64"
-  export WINELOADER="$WINE_BASEDIR/bin/wine64"
-  export WINEDLLPATH="$WINE_BASEDIR/lib64/wine/fakedlls"
+  export WINELOADER="$WINE_PLATFORM/bin/wine64"
+  export WINEDLLPATH="$WINE_PLATFORM/lib64/wine/fakedlls"
 fi
+
+append_dir PATH "$WINE_PLATFORM/bin"
+
+append_dir LD_LIBRARY_PATH "$WINE_PLATFORM/lib"
+append_dir LD_LIBRARY_PATH "$WINE_PLATFORM/lib64"
+
 
 ###########################
 # Wine runtime selection #
@@ -275,38 +269,32 @@ if [[ ! -f "$WINE_PLATFORM_RUNTIME/bin/wprfile" ]]; then
   fi
 fi
 
-export WINETRICKS="$WINE_PLATFORM_RUNTIME/bin/winetricks"
-export LD_LIBRARY_PATH="$WINE_PLATFORM_RUNTIME/lib:$WINE_PLATFORM_RUNTIME/\$LIB:$WINE_PLATFORM_RUNTIME/usr/lib:$WINE_PLATFORM_RUNTIME/usr/\$LIB:$LD_LIBRARY_PATH"
-export PATH="$PATH:$WINE_PLATFORM_RUNTIME/bin:$WINE_PLATFORM_RUNTIME/usr/bin:$WINE_BASEDIR/bin"
+append_dir PATH "$WINE_PLATFORM_RUNTIME/bin"
+append_dir PATH "$WINE_PLATFORM_RUNTIME/usr/bin"
 
-append_dir LD_LIBRARY_PATH "$WINE_PLATFORM_RUNTIME/lib64"
-append_dir LD_LIBRARY_PATH "$WINE_PLATFORM_RUNTIME/\$LIB"
-append_dir LD_LIBRARY_PATH "$WINE_PLATFORM_RUNTIME/usr/\$LIB"
-append_dir LD_LIBRARY_PATH "$WINE_PLATFORM_RUNTIME/usr/\$LIB"
-
+prepend_dir LD_LIBRARY_PATH "$WINE_PLATFORM_RUNTIME/lib"
+prepend_dir LD_LIBRARY_PATH "$WINE_PLATFORM_RUNTIME/\$LIB"
+prepend_dir LD_LIBRARY_PATH "$WINE_PLATFORM_RUNTIME/usr/lib"
+prepend_dir LD_LIBRARY_PATH "$WINE_PLATFORM_RUNTIME/usr/\$LIB"
+prepend_dir LD_LIBRARY_PATH "$WINE_PLATFORM_RUNTIME/lib64"
 # SAMBA Libs for ntlm_auth to function
 append_dir LD_LIBRARY_PATH "$WINE_PLATFORM_RUNTIME/usr/\$LIB/samba"
 append_dir LD_LIBRARY_PATH "$WINE_PLATFORM_RUNTIME/usr/\$LIB/samba"
 
-export WINEPREFIX="$SNAP_USER_COMMON/.wine"
+export WINETRICKS="$WINE_PLATFORM_RUNTIME/bin/winetricks"
 export WINETRICKS_LATEST_VERSION_CHECK="disabled"
-export wine="$WINE_BASEDIR/bin/wine"  # for dxvk installer
+
+export WINEPREFIX="$SNAP_USER_COMMON/.wine"
+
 export DXVK_CONFIG_FILE="$SNAP_USER_COMMON/dxvk.conf"
-
-append_dir PATH "$WINE_BASEDIR/bin"
-
-append_dir LD_LIBRARY_PATH "$WINE_BASEDIR/lib"
-append_dir LD_LIBRARY_PATH "$WINE_BASEDIR/lib64"
+if [[ -z "${DXVK_LOG_LEVEL:-}" ]]; then
+  export DXVK_LOG_LEVEL="none"
+fi
 
 append_dir LD_LIBRARY_PATH "$SNAP/lib"
 append_dir LD_LIBRARY_PATH "$SNAP/\$LIB"
 append_dir LD_LIBRARY_PATH "$SNAP/usr/lib"
 append_dir LD_LIBRARY_PATH "$SNAP/usr/\$LIB"
-append_dir LD_LIBRARY_PATH "/lib"
-append_dir LD_LIBRARY_PATH "/\$LIB"
-append_dir LD_LIBRARY_PATH "/usr/lib"
-append_dir LD_LIBRARY_PATH "/usr/\$LIB"
-append_dir LD_LIBRARY_PATH "$SNAP/usr/\$LIB/samba"
 
 # Don't Stop wine from updating $WINEPREFIX automatically
 if [[ -f "${WINEPREFIX}/.update-timestamp" ]]; then
