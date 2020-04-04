@@ -102,8 +102,8 @@ EOF
 install_app() {
   echo "Installing application.."
 
-  if [[ -f "$SNAP/bin/snap-pre-install" ]]; then
-    . "$SNAP/bin/snap-pre-install"
+  if [[ -f "$SNAP/sommelier-hooks/pre-install" ]]; then
+    . "$SNAP/sommelier-hooks/pre-install"
   fi
 
   # Install additional requirements via winetricks here
@@ -126,26 +126,28 @@ install_app() {
     LOCAL_INSTALL_EXE="${INSTALL_EXE}"
   fi
 
-  # Installs the wine application
-  "${WINELOADER}" "${LOCAL_INSTALL_EXE}" "${INSTALL_FLAGS:-}"
+  if [[ -n "${LOCAL_INSTALL_EXE:-}" ]]; then
+    # Installs the wine application
+    "${WINELOADER}" start /unix "${LOCAL_INSTALL_EXE}" "${INSTALL_FLAGS:-}"
+  fi
 
   if [[ -n "${INSTALL_URL:-}" ]]; then
     # Removes the cached installer
     rm -v "${TMPDIR}/${INSTALL_EXE}"
   fi
 
-  if [[ -f "$SNAP/bin/snap-post-install" ]]; then
-    . "$SNAP/bin/snap-post-install"
+  if [[ -f "$SNAP/sommelier-hooks/post-install" ]]; then
+    . "$SNAP/sommelier-hooks/post-install"
   fi
 
   echo "$SNAP_VERSION" > "$SNAP_USER_COMMON/.last_snap_version"
 }
 
-launch_app() {
-  echo "Launching application.."
+start_app() {
+  echo "Starting application.."
 
-  if [[ -f "$SNAP/bin/snap-pre-start" ]]; then
-    . "$SNAP/bin/snap-pre-start"
+  if [[ -f "$SNAP/sommelier-hooks/pre-start" ]]; then
+    . "$SNAP/sommelier-hooks/pre-start"
   fi
 
   if [ -n "${SNAP_SOMMELIER_DEBUG:-}" ]; then
@@ -157,8 +159,8 @@ launch_app() {
 
   local exit_code="$?"
 
-  if [[ -f "$SNAP/bin/snap-post-stop" ]]; then
-    . "$SNAP/bin/snap-post-stop"
+  if [[ -f "$SNAP/sommelier-hooks/post-stop" ]]; then
+    . "$SNAP/sommelier-hooks/post-stop"
   fi
 
   exit $exit_code
@@ -323,7 +325,7 @@ else
   exit 1
 fi
 
-# Launch the requested program.
+# Start the requested program.
 if [[ "$ACTION" = "winetricks" ]]; then
   "$WINETRICKS" prefix="$WINEPREFIX" "${ACTION_ARGS[@]}"
 elif [[ "$ACTION" = "winedbg" ]]; then
@@ -349,7 +351,7 @@ elif [[ "$ACTION" = "run-exe" ]]; then
   fi
 
   # Run the application
-  launch_app
+  start_app
 else
   "$WINELOADER" "$ACTION" "${ACTION_ARGS[@]}"
 fi
