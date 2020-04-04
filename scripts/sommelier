@@ -189,62 +189,44 @@ fi
 # Wine platform selection #
 ###########################
 
-if [[ -d "$SNAP/wine-platform" ]]; then
-  WINE_RELEASE="$(
+WINE_RELEASE="$(
+  grep \
+    --extended-regexp \
+    'default-provider: *wine-platform-[[:digit:]]' \
+    $SNAP/meta/snap.yaml \
+    | cut --delimiter=: --fields=2 \
+    | sed 's/^ *//;s|-| |g' \
+    | awk '{print $4}'
+)"
+WINE_BASEDIR="$SNAP/wine-platform/wine-$WINE_RELEASE"
+
+if [[ ! -d "$WINE_BASEDIR" ]]; then
+  platform_snap_name="$(
     grep \
       --extended-regexp \
       'default-provider: *wine-platform-[[:digit:]]' \
       $SNAP/meta/snap.yaml \
       | cut --delimiter=: --fields=2 \
-      | sed 's/^ *//;s|-| |g' \
-      | awk '{print $4}'
+      | sed 's/^ *//' \
+      || true
   )"
-  WINE_BASEDIR="$SNAP/wine-platform/wine-$WINE_RELEASE"
 
-  if [[ ! -d "$WINE_BASEDIR" ]]; then
-    platform_snap_name="$(
-      grep \
-        --extended-regexp \
-        'default-provider: *wine-platform-[[:digit:]]' \
-        $SNAP/meta/snap.yaml \
-        | cut --delimiter=: --fields=2 \
-        | sed 's/^ *//' \
-        || true
-    )"
-
-    if test -n "${platform_snap_name:-}"; then
-      echo "ERROR: You need to connect this snap to the wine platform snap."
-      echo ""
-      echo "You can do this with those commands:"
-      echo "snap install ${platform_snap_name}"
-      echo "snap connect $SNAP_NAME:$(echo $platform_snap_name | sed 's|-platform||g') ${platform_snap_name}"
-      echo ""
-      exit 1
-    else
-      echo "ERROR: This snap is broken. Please contact the publisher."
-      echo ""
-      echo "The snap contains a `wine-platform` folder, but no plugs to the wine platform"
-      echo "Please add the plugs to the wine platform or remove the `wine-platform` folder"
-      echo ""
-      exit 1
-    fi
+  if test -n "${platform_snap_name:-}"; then
+    echo "ERROR: You need to connect this snap to the wine platform snap."
+    echo ""
+    echo "You can do this with those commands:"
+    echo "snap install ${platform_snap_name}"
+    echo "snap connect $SNAP_NAME:$(echo $platform_snap_name | sed 's|-platform||g') ${platform_snap_name}"
+    echo ""
+    exit 1
+  else
+    echo "ERROR: This snap is broken. Please contact the publisher."
+    echo ""
+    echo "The snap has no plugs to the wine platform snap."
+    echo "Please add the plugs to the wine platform"
+    echo ""
+    exit 1
   fi
-elif [[ -x "$SNAP/bin/wine" ]]; then
-  WINE_BASEDIR="$SNAP"
-elif [[ -x "$SNAP/usr/bin/wine" ]]; then
-  WINE_BASEDIR="$SNAP/usr"
-elif [[ -d "$SNAP/opt/wine" ]]; then
-  WINE_BASEDIR="$SNAP/opt/wine"
-elif [[ -d "$SNAP/opt/wine-devel" ]]; then
-  WINE_BASEDIR="$SNAP/opt/wine-devel"
-elif [[ -d "$SNAP/opt/wine-stable" ]]; then
-  WINE_BASEDIR="$SNAP/opt/wine-stable"
-else
-  echo "ERROR: This snap is broken. Please contact the publisher."
-  echo ""
-  echo "The snap does not contain a wine installation and is not connected to wine-platform snap."
-  echo ""
-  exit 1
 fi
 
 if [[ -n "${FORCE_WIN32:-}" ]]; then
@@ -263,53 +245,48 @@ fi
 # Wine runtime selection #
 ###########################
 
-if [[ -d "$SNAP/wine-runtime" ]]; then
-  WINE_PLATFORM_RUNTIME="$SNAP/wine-runtime"
-  if [[ ! -f "$WINE_PLATFORM_RUNTIME/bin/wprfile" ]]; then
-    runtime_snap_name="$(
-        grep \
-            --extended-regexp \
-            'default-provider: *wine-platform-runtime' \
-            $SNAP/meta/snap.yaml \
-            | cut --delimiter=: --fields=2 \
-            | sed 's/^ *//' \
-            || true
-    )"
+WINE_PLATFORM_RUNTIME="$SNAP/wine-runtime"
+if [[ ! -f "$WINE_PLATFORM_RUNTIME/bin/wprfile" ]]; then
+  runtime_snap_name="$(
+    grep \
+      --extended-regexp \
+      'default-provider: *wine-platform-runtime' \
+      $SNAP/meta/snap.yaml \
+      | cut --delimiter=: --fields=2 \
+      | sed 's/^ *//' \
+      || true
+  )"
 
-    if test -n "${runtime_snap_name:-}"; then
-        echo "ERROR: You need to connect this snap to the wine runtime snap."
-        echo ""
-        echo "You can do this with those commands:"
-        echo "snap install ${runtime_snap_name}"
-        echo "snap connect $SNAP_NAME:$(echo $runtime_snap_name | sed 's|-platform||g') ${runtime_snap_name}"
-        echo ""
-        exit 1
-    else
-        echo "ERROR: This snap is broken. Please contact the publisher."
-        echo ""
-        echo "The snap contains a `wine-runtime` folder, but no plugs to the wine runtime"
-        echo "Please add the plugs to the wine runtime or remove the `wine-runtime` folder"
-        echo ""
-        exit 1
-    fi
+  if test -n "${runtime_snap_name:-}"; then
+    echo "ERROR: You need to connect this snap to the wine runtime snap."
+    echo ""
+    echo "You can do this with those commands:"
+    echo "snap install ${runtime_snap_name}"
+    echo "snap connect $SNAP_NAME:$(echo $runtime_snap_name | sed 's|-platform||g') ${runtime_snap_name}"
+    echo ""
+    exit 1
+  else
+    echo "ERROR: This snap is broken. Please contact the publisher."
+    echo ""
+    echo "The snap has no plugs to the wine runtime"
+    echo "Please add the plugs to the wine runtime"
+    echo ""
+    exit 1
   fi
-
-  export WINETRICKS="$WINE_PLATFORM_RUNTIME/bin/winetricks"
-  export LD_LIBRARY_PATH="$WINE_PLATFORM_RUNTIME/lib:$WINE_PLATFORM_RUNTIME/\$LIB:$WINE_PLATFORM_RUNTIME/usr/lib:$WINE_PLATFORM_RUNTIME/usr/\$LIB:$LD_LIBRARY_PATH"
-  export PATH="$PATH:$WINE_PLATFORM_RUNTIME/bin:$WINE_PLATFORM_RUNTIME/usr/bin:$WINE_BASEDIR/bin"
-
-  append_dir LD_LIBRARY_PATH "$WINE_PLATFORM_RUNTIME/lib64"
-  append_dir LD_LIBRARY_PATH "$WINE_PLATFORM_RUNTIME/\$LIB"
-  append_dir LD_LIBRARY_PATH "$WINE_PLATFORM_RUNTIME/usr/\$LIB"
-  append_dir LD_LIBRARY_PATH "$WINE_PLATFORM_RUNTIME/usr/\$LIB"
-
-
-  # SAMBA Libs for ntlm_auth to function
-  append_dir LD_LIBRARY_PATH "$WINE_PLATFORM_RUNTIME/usr/\$LIB/samba"
-  append_dir LD_LIBRARY_PATH "$WINE_PLATFORM_RUNTIME/usr/\$LIB/samba"
-else
-  export WINETRICKS="$SNAP/bin/winetricks"
 fi
+
+export WINETRICKS="$WINE_PLATFORM_RUNTIME/bin/winetricks"
+export LD_LIBRARY_PATH="$WINE_PLATFORM_RUNTIME/lib:$WINE_PLATFORM_RUNTIME/\$LIB:$WINE_PLATFORM_RUNTIME/usr/lib:$WINE_PLATFORM_RUNTIME/usr/\$LIB:$LD_LIBRARY_PATH"
+export PATH="$PATH:$WINE_PLATFORM_RUNTIME/bin:$WINE_PLATFORM_RUNTIME/usr/bin:$WINE_BASEDIR/bin"
+
+append_dir LD_LIBRARY_PATH "$WINE_PLATFORM_RUNTIME/lib64"
+append_dir LD_LIBRARY_PATH "$WINE_PLATFORM_RUNTIME/\$LIB"
+append_dir LD_LIBRARY_PATH "$WINE_PLATFORM_RUNTIME/usr/\$LIB"
+append_dir LD_LIBRARY_PATH "$WINE_PLATFORM_RUNTIME/usr/\$LIB"
+
+# SAMBA Libs for ntlm_auth to function
+append_dir LD_LIBRARY_PATH "$WINE_PLATFORM_RUNTIME/usr/\$LIB/samba"
+append_dir LD_LIBRARY_PATH "$WINE_PLATFORM_RUNTIME/usr/\$LIB/samba"
 
 export WINEPREFIX="$SNAP_USER_COMMON/.wine"
 export WINETRICKS_LATEST_VERSION_CHECK="disabled"
