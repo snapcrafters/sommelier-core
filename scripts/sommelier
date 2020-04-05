@@ -113,7 +113,7 @@ install_app() {
 
   if [[ -n "${LOCAL_INSTALL_EXE:-}" ]]; then
     # Installs the wine application
-    "${WINELOADER}" start /unix "${LOCAL_INSTALL_EXE}" "${INSTALL_FLAGS:-}"
+    "${WINELOADER}" "${LOCAL_INSTALL_EXE}" "${INSTALL_FLAGS:-}"
   fi
 
   if [[ -n "${INSTALL_URL:-}" ]]; then
@@ -137,11 +137,14 @@ start_app() {
 
   if [ -n "${SNAP_SOMMELIER_DEBUG:-}" ]; then
     echo "sommelier elapsed time: $(date +%s.%N --date="$START seconds ago")"
-    echo "Now running: '${WINELOADER}' start /wait /unix '${RUN_EXE}' '${ACTION_ARGS[@]}'"
+    echo "Now running: '${WINELOADER}' '${RUN_EXE}' '${ACTION_ARGS[@]}'"
   fi
 
-  "${WINELOADER}" start /wait /unix "${RUN_EXE}" "${ACTION_ARGS[@]}"
-
+  # Note 1: We use `wine` because `wine start \wait \unix` has problems with
+  #         relative unix-style paths.
+  # Note 2: `wine` already waits until the program exits, so we don't need to
+  #          manually wait here.
+  "${WINELOADER}" "${RUN_EXE}" "${ACTION_ARGS[@]}"
   local exit_code="$?"
 
   if [[ -f "$SNAP/sommelier-hooks/post-stop" ]]; then
@@ -159,6 +162,7 @@ fi
 if [[ -n "${INSTALL_URL:-}" ]]; then
   INSTALL_EXE="$(basename "${INSTALL_URL}")"
 fi
+
 
 ###########################
 # Wine platform selection #
@@ -295,10 +299,10 @@ if [[ ! -f "${WINEPREFIX}/drive_c/windows/system.ini"  || "$(cat "$SNAP_USER_COM
   init_wine
 fi
 
+
 #####################################
 # Actually run the requested action #
 #####################################
-
 
 # Get the action we're asked to run
 if [[ -n "${1:-}" ]]; then
