@@ -72,11 +72,13 @@ init_wine() {
   ensure_dir_exists "$WINEPREFIX/drive_c/windows/Fonts"
   find /usr/share/fonts/ -type f \( -name "*.ttf" -o -name "*.ttc" \) -exec ln -vs "{}" "$WINEPREFIX/drive_c/windows/Fonts/" \; &>/dev/null
 
-  # Install the ReactOS Modern theme and set as default
-  ensure_dir_exists "$WINEPREFIX/drive_c/windows/Resources/Themes/modern"
-  cp -r "$SNAP/sommelier/themes/"* "$WINEPREFIX/drive_c/windows/Resources/Themes"
-  "$WINELOADER" regedit "$SNAP/sommelier/themes/modern/modern.reg"
-  sleep 1
+  if [[ -z "$DEFAULT_THEME" ]]; then
+    # Install the ReactOS Modern theme and set as default
+    ensure_dir_exists "$WINEPREFIX/drive_c/windows/Resources/Themes/modern"
+    cp -r "$SNAP/sommelier/themes/"* "$WINEPREFIX/drive_c/windows/Resources/Themes"
+    "$WINELOADER" regedit "$SNAP/sommelier/themes/modern/modern.reg"
+    sleep 1
+  fi
 
   # Better support for Chinese fonts.
   if (locale | grep -e 'LANG=zh_CN' -e 'LANG=zh_SG') >/dev/null 2>&1; then
