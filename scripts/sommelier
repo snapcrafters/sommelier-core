@@ -28,18 +28,23 @@ ensure_dir_exists() {
   [[ -d "$1" ]] ||  mkdir -p "$@"
 }
 
+# Note: We avoid using `eval` because we don't want to expand variable names
+#       in paths. For example: LD_PRELOAD paths might contain `$LIB`.
 prepend_dir() {
-  local var="$1"
+  local -n var="$1"
   local dir="$2"
-  local LIB="\$LIB"
-  eval "export $var=\"\$dir\${$var:+:\$$var}\""
+  # We can't check if the dir exists when the dir contains variables
+  if [[ "$dir" == *"\$"*  || -d "$dir" ]]; then
+    export ${!var}="${dir}${var:+:$var}"
+  fi
 }
-
 append_dir() {
-  local var="$1"
+  local -n var="$1"
   local dir="$2"
-  local LIB="\$LIB"
-  eval "export $var=\"\${$var:+\$$var:}\$dir\""
+  # We can't check if the dir exists when the dir contains variables
+  if [[ "$dir" == *"\$"*  || -d "$dir" ]]; then
+    export ${!var}="${var:+$var:}${dir}"
+  fi
 }
 
 #######################
@@ -49,8 +54,8 @@ append_dir() {
 init_wine() {
   echo "Initialising Wine.."
 
-  if [[ -z "${FORCE_WIN32:-}" ]] && grep "arch=win32" "$WINEPREFIX/system.reg" ; then
-      echo "WARNING: Old Wine prefix is win32, but FORCE_WIN32 is not set. Removing old Wine prefix and generating a win64 one."
+  if [[  "${WINEARCH:-}" != "win32"  ]] && grep "arch=win32" "$WINEPREFIX/system.reg" ; then
+      echo "WARNING: Old Wine prefix is win32, but WINEARCH is not `win32`. Backing up old Wine prefix and generating a win64 one."
       mv "$WINEPREFIX" "${WINEPREFIX}.bak-$(date +%s)"
   fi
 
@@ -208,19 +213,15 @@ if [[ ! -d "$WINE_PLATFORM" ]]; then
   fi
 fi
 
-if [[ -n "${FORCE_WIN32:-}" ]]; then
-  export WINE="wine"
-  export WINEARCH="win32"
-  export WINELOADER="$WINE_PLATFORM/bin/wine"
-  export WINEDLLPATH="$WINE_PLATFORM/lib/wine/fakedlls"
-else
-  export WINE="wine64"
-  export WINEARCH="win64"
-  export WINELOADER="$WINE_PLATFORM/bin/wine64"
-  export WINEDLLPATH="$WINE_PLATFORM/lib64/wine/fakedlls"
-fi
-
 append_dir PATH "$WINE_PLATFORM/bin"
+
+# Note: Technically, we should be able to just use the `wine` command and get
+#       Wine location from PATH, but it doesn't hurt to use the absolute path.
+# Note: The `wine` command runs 64-bit Wine by default, unless specified
+#       otherwise by WINEARCH
+# Note: We don't need to manually specify WINEDLLPATH, `wine` can find them on
+#       its own.
+export WINELOADER="$WINE_PLATFORM/bin/wine"
 
 append_dir LD_LIBRARY_PATH "$WINE_PLATFORM/lib"
 append_dir LD_LIBRARY_PATH "$WINE_PLATFORM/lib64"
@@ -263,6 +264,10 @@ fi
 append_dir PATH "$WINE_PLATFORM_RUNTIME/bin"
 append_dir PATH "$WINE_PLATFORM_RUNTIME/usr/bin"
 
+# Note: LD_PRELOAD and LD_LIBRARY_PATH accept the variable `$LIB` as part of a
+#       path. The linker will expand this to `lib/<arch>-linux-gnu` on debian-
+#       based systems where <arch> is the architecture of the binary it is
+#       linking. This is why we make sure to expand
 prepend_dir LD_LIBRARY_PATH "$WINE_PLATFORM_RUNTIME/lib"
 prepend_dir LD_LIBRARY_PATH "$WINE_PLATFORM_RUNTIME/\$LIB"
 prepend_dir LD_LIBRARY_PATH "$WINE_PLATFORM_RUNTIME/usr/lib"

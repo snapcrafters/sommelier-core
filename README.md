@@ -34,7 +34,7 @@ Environment variables are used to configure sommelier.
 * `INSTALL_FLAGS`: Windows-style CLI flags to pass to the installer. Many installers have CLI flags for silent installation, for example.
 * `WINEDLLOVERRIDES`: Override DLL loading behavior: configure Wine to choose between native and builtin DLLs. See [DLL Overrides](https://wiki.winehq.org/Wine_User%27s_Guide#DLL_Overrides) and [WINEDLLOVERRIDES](https://wiki.winehq.org/Wine_User%27s_Guide#WINEDLLOVERRIDES.3DDLL_Overrides) docs for more information. Example: `"mscoree,mshtml="`
 * `WINEESYNC`: set to `1` to enable esync. This can increase performance for some games, especially ones that rely heavily on the CPU. See [esync docs](https://github.com/zfigura/wine/blob/esync/README.esync) for more information.
-* `FORCE_WIN32`: All applications are run using `wine64` by default, which can run both 32-bit and 64-bit Windows binaries. Some 32-bit applications, however, have issues when you run them using `wine64`. For these applications, set `FORCE_WIN32` to `1` to force sommelier to use a 32-bit prefix.
+* `WINEARCH`: Wine will start an 64-bit environment by default. This runs both 32-bit and 64-bit Windows binaries. Some 32-bit applications, however, have issues when you run them in 64-bit Wine. For these applications, set `WINEARCH` to `win32` to use a 32-bit-only environment.
 
 ### Development and debugging
 
