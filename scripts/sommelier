@@ -54,7 +54,7 @@ append_dir() {
 init_wine() {
   echo "Initialising Wine.."
 
-  if [[  "${WINEARCH:-}" != "win32"  ]] && grep "arch=win32" "$WINEPREFIX/system.reg" ; then
+  if [[  "${WINEARCH:-}" != "win32"  ]] && grep "arch=win32" "$WINEPREFIX/system.reg" >/dev/null 2>&1 ; then
       echo "WARNING: Old Wine prefix is win32, but WINEARCH is not `win32`. Backing up old Wine prefix and generating a win64 one."
       mv "$WINEPREFIX" "${WINEPREFIX}.bak-$(date +%s)"
   fi
@@ -92,8 +92,9 @@ init_wine() {
 install_app() {
   echo "Installing application.."
 
-  if [[ -f "$SNAP/sommelier-hooks/pre-install" ]]; then
-    . "$SNAP/sommelier-hooks/pre-install"
+  if [[ -f "$SNAP/sommelier/hooks/pre-install" ]]; then
+    echo "Running hook '$SNAP/sommelier/hooks/pre-install'"
+    . "$SNAP/sommelier/hooks/pre-install"
   fi
 
   # Install additional requirements via winetricks here
@@ -126,8 +127,9 @@ install_app() {
     rm -v "${TMPDIR}/${INSTALL_EXE}"
   fi
 
-  if [[ -f "$SNAP/sommelier-hooks/post-install" ]]; then
-    . "$SNAP/sommelier-hooks/post-install"
+  if [[ -f "$SNAP/sommelier/hooks/post-install" ]]; then
+    echo "Running hook '$SNAP/sommelier/hooks/post-install'"
+    . "$SNAP/sommelier/hooks/post-install"
   fi
 
   echo "$SNAP_VERSION" > "$SNAP_USER_COMMON/.last_snap_version"
@@ -136,13 +138,14 @@ install_app() {
 start_app() {
   echo "Starting application.."
 
-  if [[ -f "$SNAP/sommelier-hooks/pre-start" ]]; then
-    . "$SNAP/sommelier-hooks/pre-start"
+  if [[ -f "$SNAP/sommelier/hooks/pre-start" ]]; then
+    echo "Running hook '$SNAP/sommelier/hooks/pre-start'"
+    . "$SNAP/sommelier/hooks/pre-start"
   fi
 
   if [ -n "${SNAP_SOMMELIER_DEBUG:-}" ]; then
-    echo "sommelier elapsed time: $(date +%s.%N --date="$START seconds ago")"
-    echo "Now running: '${WINELOADER}' '${RUN_EXE}' '${ACTION_ARGS[@]}'"
+    echo "DEBUG: Sommelier elapsed time: $(date +%s.%N --date="$START seconds ago")"
+    echo "DEBUG: Now running: '${WINELOADER}' '${RUN_EXE}' '${ACTION_ARGS[@]}'"
   fi
 
   # Note 1: We use `wine` because `wine start \wait \unix` has problems with
@@ -152,8 +155,9 @@ start_app() {
   "${WINELOADER}" "${RUN_EXE}" "${ACTION_ARGS[@]}"
   local exit_code="$?"
 
-  if [[ -f "$SNAP/sommelier-hooks/post-stop" ]]; then
-    . "$SNAP/sommelier-hooks/post-stop"
+  if [[ -f "$SNAP/sommelier/hooks/post-stop" ]]; then
+    echo "Running hook '$SNAP/sommelier/hooks/post-stop'"
+    . "$SNAP/sommelier/hooks/post-stop"
   fi
 
   exit $exit_code
