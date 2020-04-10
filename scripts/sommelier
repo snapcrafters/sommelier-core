@@ -29,7 +29,7 @@ ensure_dir_exists() {
 }
 
 # Note: We avoid using `eval` because we don't want to expand variable names
-#       in paths. For example: LD_PRELOAD paths might contain `$LIB`.
+#       in paths. For example: LD_LIBRARY_PATH paths might contain `$LIB`.
 prepend_dir() {
   local -n var="$1"
   local dir="$2"
