@@ -72,7 +72,7 @@ init_wine() {
   ensure_dir_exists "$WINEPREFIX/drive_c/windows/Fonts"
   find /usr/share/fonts/ -type f \( -name "*.ttf" -o -name "*.ttc" \) -exec ln -vs "{}" "$WINEPREFIX/drive_c/windows/Fonts/" \; &>/dev/null
 
-  if [[ -z "$DEFAULT_THEME" ]]; then
+  if [[ -z "${DEFAULT_THEME:-}" ]]; then
     # Install the ReactOS Modern theme and set as default
     ensure_dir_exists "$WINEPREFIX/drive_c/windows/Resources/Themes/modern"
     cp -r "$SNAP/sommelier/themes/"* "$WINEPREFIX/drive_c/windows/Resources/Themes"
