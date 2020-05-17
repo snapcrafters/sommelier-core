@@ -35,15 +35,16 @@ prepend_dir() {
   local dir="$2"
   # We can't check if the dir exists when the dir contains variables
   if [[ "$dir" == *"\$"*  || -d "$dir" ]]; then
-    export ${!var}="${dir}${var:+:$var}"
+    export "${!var}=${dir}${var:+:$var}"
   fi
 }
+
 append_dir() {
   local -n var="$1"
   local dir="$2"
   # We can't check if the dir exists when the dir contains variables
   if [[ "$dir" == *"\$"*  || -d "$dir" ]]; then
-    export ${!var}="${var:+$var:}${dir}"
+    export "${!var}=${var:+$var:}${dir}"
   fi
 }
 
