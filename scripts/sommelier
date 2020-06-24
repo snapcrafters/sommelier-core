@@ -307,6 +307,12 @@ if [[ -f "${WINEPREFIX}/.update-timestamp" ]]; then
   fi
 fi
 
+# Disable the WineMenuBuilder. It creates Desktop shortcuts and configures
+# file associations for the applications you install in wine. This does not
+# work in a snap, however, since those are handled by snapd instead. The only
+# thing it does is pollute ~/Desktop with broken `.desktop` files.
+export WINEDLLOVERRIDES="${WINEDLLOVERRIDES:-};winemenubuilder.exe=d"
+
 if [[ ! -f "${WINEPREFIX}/drive_c/windows/system.ini"  || "$(cat "$SNAP_USER_COMMON/.last_snap_revision" 2>/dev/null)" != "$SNAP_REVISION" ]]; then
   init_wine
 fi
