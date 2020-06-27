@@ -136,7 +136,8 @@ install_app() {
     IFS=$'\n' ARR_INSTALL_FLAGS=( $(xargs -n1 <<<"${INSTALL_FLAGS:-}") )
     # Piping the wine command to yad gives weird behavior, so instead we use
     # yad in the background and kill it after the installation finishes.
-    yes | yad --progress --title="Installing ${INSTALL_EXE}" --progress-text= --width=400 --center --no-buttons --auto-close --auto-kill --on-top --pulsate &
+    EXE_NAME=$(basename "${LOCAL_INSTALL_EXE}")
+    yes | yad --progress --title="Installing ${EXE_NAME}" --progress-text= --width=400 --center --no-buttons --auto-close --auto-kill --on-top --pulsate &
     INSTALL_YAD_PID="$!"
     "${WINELOADER}" "${LOCAL_INSTALL_EXE}" "${ARR_INSTALL_FLAGS[@]}"
     kill "$INSTALL_YAD_PID"
