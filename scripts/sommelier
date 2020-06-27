@@ -131,8 +131,15 @@ install_app() {
 
   # Install the application in Wine
   if [[ -n "${LOCAL_INSTALL_EXE:-}" ]]; then
-    # Installs the wine application
-    "${WINELOADER}" "${LOCAL_INSTALL_EXE}" "${INSTALL_FLAGS:-}"
+    # Convert INSTALL_FLAGS to an array to support multiple quoted arguments.
+    # https://stackoverflow.com/a/37381300/1588555
+    IFS=$'\n' ARR_INSTALL_FLAGS=( $(xargs -n1 <<<"${INSTALL_FLAGS:-}") )
+    # Piping the wine command to yad gives weird behavior, so instead we use
+    # yad in the background and kill it after the installation finishes.
+    yes | yad --progress --title="Installing ${INSTALL_EXE}" --progress-text= --width=400 --center --no-buttons --auto-close --auto-kill --on-top --pulsate &
+    INSTALL_YAD_PID="$!"
+    "${WINELOADER}" "${LOCAL_INSTALL_EXE}" "${ARR_INSTALL_FLAGS[@]}"
+    kill "$INSTALL_YAD_PID"
   fi
 
   # Remove the cached installer
