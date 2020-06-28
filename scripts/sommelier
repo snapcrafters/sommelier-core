@@ -372,10 +372,8 @@ elif [[ "$ACTION" = "run-exe" ]]; then
     exit 1
   fi
 
-  # Turn relative path to executable into an absolute path.
-  if [[ "$RUN_EXE" == "/Program Files"* ||  "$RUN_EXE" == "/users"* ]]; then
-    RUN_EXE="${WINEPREFIX}/drive_c${RUN_EXE}"
-  fi
+  # Convert Windows path to unix
+  RUN_EXE=$("$WINELOADER" winepath "$RUN_EXE")
 
   # Install if the executable doesn't exist or the snap version changed.
   if [[ ! -e "$RUN_EXE"  || "$(cat "$SNAP_USER_COMMON/.last_snap_version" 2>/dev/null)" != "$SNAP_VERSION" ]]; then
