@@ -305,6 +305,14 @@ prepend_dir LD_LIBRARY_PATH "$WINE_PLATFORM_RUNTIME/\$LIB"
 prepend_dir LD_LIBRARY_PATH "$WINE_PLATFORM_RUNTIME/usr/lib"
 prepend_dir LD_LIBRARY_PATH "$WINE_PLATFORM_RUNTIME/usr/\$LIB"
 prepend_dir LD_LIBRARY_PATH "$WINE_PLATFORM_RUNTIME/lib64"
+
+# GPU support for 32-bit Wine apps is provided by the . (Gnome extensions only support 64-bit apps
+# Use Wine-platform libraries for GPU access because they also contain 32-bit
+# drivers. The Gnome platform snaps currently only provide 64-bit libraries.
+prepend_dir LD_LIBRARY_PATH "$WINE_PLATFORM_RUNTIME/usr/\$LIB/dri/"
+prepend_dir LIBGL_DRIVERS_PATH "$WINE_PLATFORM_RUNTIME/usr/\$LIB/dri/"
+prepend_dir LIBVA_DRIVERS_PATH "$WINE_PLATFORM_RUNTIME/usr/\$LIB/dri/"
+
 # SAMBA Libs for ntlm_auth to function
 append_dir LD_LIBRARY_PATH "$WINE_PLATFORM_RUNTIME/usr/\$LIB/samba"
 append_dir LD_LIBRARY_PATH "$WINE_PLATFORM_RUNTIME/usr/\$LIB/samba"
