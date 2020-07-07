@@ -176,12 +176,28 @@ start_app() {
     echo "DEBUG: Now running: '${WINELOADER}' '${RUN_EXE}' '${ACTION_ARGS[@]}'"
   fi
 
+  # Because Windows software will often look for program files in the location
+  # they were started from we need to start it in a very specific way: change
+  # directory to the folder where the program is located and run the .exe file
+  # using _only_ its filename. 
+  app_dir=$(dirname "${RUN_EXE}")
+  app=$(basename "${RUN_EXE}")
+  cd "${app_dir}"
+
   # Note 1: We use `wine` because `wine start \wait \unix` has problems with
   #         relative unix-style paths.
   # Note 2: `wine` already waits until the program exits, so we don't need to
   #          manually wait here.
-  "${WINELOADER}" "${RUN_EXE}" "${ACTION_ARGS[@]}"
-  local exit_code="$?"
+  # Note 3: If requested, we run the app in a new virtual desktop. This
+  #         eliminates burgs when switching from fullscreen to windowed mode.
+  if [ "${XDG_SESSION_TYPE}" == "x11" ] && [ "${VIRTDESKTOP:-}" == "1" ]; then
+    NATIVE_RES=$(xrandr -q | grep primary | cut -d' ' -f4 | cut -d'+' -f1)
+    "${WINELOADER}" explorer /desktop="virtual","${NATIVE_RES}" "${app}" "${ACTION_ARGS[@]}"
+    local exit_code="$?"
+  else
+    "${WINELOADER}" "${app}" "${ACTION_ARGS[@]}"
+    local exit_code="$?"
+  fi
 
   if [[ -f "$SNAP/sommelier/hooks/post-stop" ]]; then
     echo "Running hook '$SNAP/sommelier/hooks/post-stop'"
@@ -304,17 +320,17 @@ prepend_dir LD_LIBRARY_PATH "$WINE_PLATFORM_RUNTIME/lib"
 prepend_dir LD_LIBRARY_PATH "$WINE_PLATFORM_RUNTIME/\$LIB"
 prepend_dir LD_LIBRARY_PATH "$WINE_PLATFORM_RUNTIME/usr/lib"
 prepend_dir LD_LIBRARY_PATH "$WINE_PLATFORM_RUNTIME/usr/\$LIB"
-prepend_dir LD_LIBRARY_PATH "$WINE_PLATFORM_RUNTIME/lib64"
 
-# GPU support for 32-bit Wine apps is provided by the . (Gnome extensions only support 64-bit apps
 # Use Wine-platform libraries for GPU access because they also contain 32-bit
 # drivers. The Gnome platform snaps currently only provide 64-bit libraries.
 prepend_dir LD_LIBRARY_PATH "$WINE_PLATFORM_RUNTIME/usr/\$LIB/dri/"
 prepend_dir LIBGL_DRIVERS_PATH "$WINE_PLATFORM_RUNTIME/usr/\$LIB/dri/"
 prepend_dir LIBVA_DRIVERS_PATH "$WINE_PLATFORM_RUNTIME/usr/\$LIB/dri/"
 
+# Use wine-platform libs for 32-bit audio support.
+prepend_dir LD_LIBRARY_PATH "$WINE_PLATFORM_RUNTIME/usr/\$LIB/pulseaudio"
+
 # SAMBA Libs for ntlm_auth to function
-append_dir LD_LIBRARY_PATH "$WINE_PLATFORM_RUNTIME/usr/\$LIB/samba"
 append_dir LD_LIBRARY_PATH "$WINE_PLATFORM_RUNTIME/usr/\$LIB/samba"
 
 export WINETRICKS="$WINE_PLATFORM_RUNTIME/bin/winetricks"
