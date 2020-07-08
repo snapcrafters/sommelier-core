@@ -55,6 +55,7 @@ Environment variables are used to configure sommelier.
 This repository uses branches for stable and backwards-compatible releases. For example, all updates to the "1.0" branch of this repository will be backwards compatible. Set the `source-branch` propertie of the `sommelier` part in your `snapcraft.yaml` file to use a stable version.
 
 ```yaml
+parts:
   sommelier:
     plugin: make
     source: https://github.com/snapcrafters/sommelier-core.git
@@ -65,3 +66,8 @@ This repository uses branches for stable and backwards-compatible releases. For 
 
 * `SOMMELIER_DEBUG`: Enable bash tracing for the sommelier script and time how long sommelier runs before starting the application.
 * `SOMMELIER_STRICT`: Make sommelier exit when an unset variable is used. This might be useful to find bugs in sommelier.
+
+## License
+
+* The ReactOS Modern theme is released under the GNU General Public License v3.0 with the [ReactOS License Binary Linking Exception](https://reactos.org/intellectual-property-guideline/).
+* All other content is released under the MIT license.
