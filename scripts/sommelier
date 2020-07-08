@@ -188,16 +188,8 @@ start_app() {
   #         relative unix-style paths.
   # Note 2: `wine` already waits until the program exits, so we don't need to
   #          manually wait here.
-  # Note 3: If requested, we run the app in a new virtual desktop. This
-  #         eliminates burgs when switching from fullscreen to windowed mode.
-  if [ "${XDG_SESSION_TYPE}" == "x11" ] && [ "${VIRTDESKTOP:-}" == "1" ]; then
-    NATIVE_RES=$(xrandr -q | grep primary | cut -d' ' -f4 | cut -d'+' -f1)
-    "${WINELOADER}" explorer /desktop="virtual","${NATIVE_RES}" "${app}" "${ACTION_ARGS[@]}"
-    local exit_code="$?"
-  else
-    "${WINELOADER}" "${app}" "${ACTION_ARGS[@]}"
-    local exit_code="$?"
-  fi
+  "${WINELOADER}" "${app}" "${ACTION_ARGS[@]}"
+  local exit_code="$?"
 
   if [[ -f "$SNAP/sommelier/hooks/post-stop" ]]; then
     echo "Running hook '$SNAP/sommelier/hooks/post-stop'"
