@@ -55,7 +55,7 @@ parts:
   sommelier:
     plugin: make
     source: https://github.com/snapcrafters/sommelier-core.git
-    source-branch: 1.0
+    source-branch: "1.0"
 ```
 
 ### Development and debugging
