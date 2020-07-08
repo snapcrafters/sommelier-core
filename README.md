@@ -45,6 +45,7 @@ See the following snaps for complete examples of how to use sommelier-core.
 * `WINEESYNC`: set to `1` to enable esync. This can increase performance for some games, especially ones that rely heavily on the CPU. See [esync docs](https://github.com/zfigura/wine/blob/esync/README.esync) for more information.
 * `WINEARCH`: Wine will start an 64-bit environment by default. This runs both 32-bit and 64-bit Windows binaries. Some 32-bit applications, however, have issues when you run them in 64-bit Wine. For these applications, set `WINEARCH` to `win32` to use a 32-bit-only environment.
 * `SOMMELIER_NO_THEME`: Use this variable to disable the ReactOS Modern theme. Some Java 1.6 applications crash when you apply a theme.
+* `SOMMELIER_KEEP_CWD`: Use this variable when sommelier should not change the working directory before executing the app. This is useful if your app can take filenames as arguments and you want relative filenames to work. Note: some Windows apps only work when the working directory is their application directory.
 
 ## Compatibility
 

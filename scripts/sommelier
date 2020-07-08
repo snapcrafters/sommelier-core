@@ -179,10 +179,14 @@ start_app() {
   # Because Windows software will often look for program files in the location
   # they were started from we need to start it in a very specific way: change
   # directory to the folder where the program is located and run the .exe file
-  # using _only_ its filename. 
-  app_dir=$(dirname "${RUN_EXE}")
-  app=$(basename "${RUN_EXE}")
-  cd "${app_dir}"
+  # using _only_ its filename.
+  if [ -z "${SOMMELIER_KEEP_CWD:-}" ]; then
+    app_dir=$(dirname "${RUN_EXE}")
+    app=$(basename "${RUN_EXE}")
+    cd "${app_dir}"
+  else
+    app="${RUN_EXE}"
+  fi
 
   # Note 1: We use `wine` because `wine start \wait \unix` has problems with
   #         relative unix-style paths.
