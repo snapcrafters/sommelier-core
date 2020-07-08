@@ -1,11 +1,11 @@
 #!/bin/bash
 
-if [[ -n "${SNAP_SOMMELIER_STRICT:-}" ]]; then
+if [[ -n "${SOMMELIER_STRICT:-}" ]]; then
   # set -e
   set -u
 fi
 
-if [[ -n "${SNAP_SOMMELIER_DEBUG:-}" ]]; then
+if [[ -n "${SOMMELIER_DEBUG:-}" ]]; then
   START=$(date +%s.%N)
   set -x
 fi
@@ -80,7 +80,7 @@ init_wine() {
   ensure_dir_exists "$WINEPREFIX/drive_c/windows/Fonts"
   find /usr/share/fonts/ -type f \( -name "*.ttf" -o -name "*.ttc" \) -exec ln -vs "{}" "$WINEPREFIX/drive_c/windows/Fonts/" \; &>/dev/null
 
-  if [[ -z "${DEFAULT_THEME:-}" ]]; then
+  if [[ -z "${SOMMELIER_NO_THEME:-}" ]]; then
     # Install the ReactOS Modern theme and set as default
     ensure_dir_exists "$WINEPREFIX/drive_c/windows/Resources/Themes/modern"
     cp -r "$SNAP/sommelier/themes/"* "$WINEPREFIX/drive_c/windows/Resources/Themes"
@@ -171,7 +171,7 @@ start_app() {
     . "$SNAP/sommelier/hooks/pre-start"
   fi
 
-  if [ -n "${SNAP_SOMMELIER_DEBUG:-}" ]; then
+  if [ -n "${SOMMELIER_DEBUG:-}" ]; then
     echo "DEBUG: Sommelier elapsed time: $(date +%s.%N --date="$START seconds ago")"
     echo "DEBUG: Now running: '${WINELOADER}' '${RUN_EXE}' '${ACTION_ARGS[@]}'"
   fi
