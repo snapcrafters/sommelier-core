@@ -9,7 +9,7 @@ Pros:
 * Uses Wine from the wine-platform snaps to reduce the size of your snap.
 * Uses the `gnome-3-28` extension for initializing all the generic desktop stuff.
 * Includes the "Modern" theme from [ReactOS](https://reactos.org/) so Windows applications look less ugly.
-* Updates the wine prefix every time wine changes. Can upgrade a 32-bit Wine prefix to 64-bit.
+* Updates the Wine prefix every time Wine changes. Can upgrade a 32-bit Wine prefix to 64-bit.
 * Reinstalls the Windows app every time the snap `version` changes.
 * Reconfigures Wine every time the snap `revision` or the Wine version changes.  
 * Users can run `myapp.wine` to run arbitrary applications inside this snap.
@@ -21,9 +21,11 @@ Cons:
 
 ## How to use
 
-See the [PhotoScape Snap](https://github.com/snapcrafters/photoscape) for a complete example of a snap using sommelier-core.
+See the following snaps for complete examples of how to use sommelier-core.
 
-Environment variables are used to configure sommelier.
+* [PhotoScape snap](https://github.com/snapcrafters/photoscape)
+* [Bridge Designer snap](https://github.com/snapcrafters/bridge-designer)
+* [TrackMania Nations Forever snap](https://github.com/galgalesh/tmnationsforever)
 
 ### General use
 
@@ -43,12 +45,6 @@ Environment variables are used to configure sommelier.
 * `WINEESYNC`: set to `1` to enable esync. This can increase performance for some games, especially ones that rely heavily on the CPU. See [esync docs](https://github.com/zfigura/wine/blob/esync/README.esync) for more information.
 * `WINEARCH`: Wine will start an 64-bit environment by default. This runs both 32-bit and 64-bit Windows binaries. Some 32-bit applications, however, have issues when you run them in 64-bit Wine. For these applications, set `WINEARCH` to `win32` to use a 32-bit-only environment.
 * `SOMMELIER_NO_THEME`: Use this variable to disable the ReactOS Modern theme. Some Java 1.6 applications crash when you apply a theme.
-
-### Examples
-
-* [PhotoScape snap](https://github.com/snapcrafters/photoscape)
-* [Bridge Designer snap](https://github.com/snapcrafters/bridge-designer)
-* [TrackMania Nations Forever snap](https://github.com/galgalesh/tmnationsforever)
 
 ## Compatibility
 
