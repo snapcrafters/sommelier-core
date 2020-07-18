@@ -171,7 +171,7 @@ start_app() {
     . "$SNAP/sommelier/hooks/pre-start"
   fi
 
-  if [ -n "${SOMMELIER_DEBUG:-}" ]; then
+  if [[ -n "${SOMMELIER_DEBUG:-}" ]]; then
     echo "DEBUG: Sommelier elapsed time: $(date +%s.%N --date="$START seconds ago")"
     echo "DEBUG: Now running: '${WINELOADER}' '${RUN_EXE}' '${ACTION_ARGS[@]}'"
   fi
@@ -180,7 +180,7 @@ start_app() {
   # they were started from we need to start it in a very specific way: change
   # directory to the folder where the program is located and run the .exe file
   # using _only_ its filename.
-  if [ -z "${SOMMELIER_KEEP_CWD:-}" ]; then
+  if [[ -z "${SOMMELIER_KEEP_CWD:-}" ]]; then
     app_dir=$(dirname "${RUN_EXE}")
     app=$(basename "${RUN_EXE}")
     cd "${app_dir}"
@@ -192,11 +192,18 @@ start_app() {
   #         relative unix-style paths.
   # Note 2: `wine` already waits until the program exits, so we don't need to
   #          manually wait here.
-  # Note 3: If requested, we run the app in a new virtual desktop. This
-  #         eliminates burgs when switching from fullscreen to windowed mode.
-  if [ "${XDG_SESSION_TYPE}" == "x11" ] && [ "${VIRTDESKTOP:-}" == "1" ]; then
-    NATIVE_RES=$(xrandr -q | grep primary | cut -d' ' -f4 | cut -d'+' -f1)
-    "${WINELOADER}" explorer /desktop="virtual","${NATIVE_RES}" "${app}" "${ACTION_ARGS[@]}"
+  # Note 3: If requested, we run the app in a new virtual desktop. This can
+  #         elimitate bugs with alt-tab and fullscreen on XWayland.
+  if [[ -n "${SOMMELIER_VIRTDESKTOP:-}" ]]; then
+    local native_res
+    if [[ "${XDG_SESSION_TYPE}" == "x11" ]]; then
+      native_res=$(xrandr -q | grep primary | cut -d' ' -f4 | cut -d'+' -f1)
+    else
+      # Wayland doesn't have a "primary display". We use the biggest screen
+      # instead.
+      native_res=$(xrandr -q | grep XWAYLAND | cut -d' ' -f3 | cut -d'+' -f1 | sort -r -n | sort -r -n | head -n 1)
+    fi
+    "${WINELOADER}" explorer /desktop="virtual","${native_res}" "${app}" "${ACTION_ARGS[@]}"
     local exit_code="$?"
   else
     "${WINELOADER}" "${app}" "${ACTION_ARGS[@]}"
