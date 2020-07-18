@@ -15,10 +15,6 @@ Pros:
 * Users can run `myapp.wine` to run arbitrary applications inside this snap.
 * Users can run `myapp.winetricks` to modify the Wine environment.
 
-Cons:
-
-* This script currently only runs on amd64 machines. Most distributions have dropped support for 32-bit installations, and Wine isn't very useful on ARM.
-
 ## How to use
 
 See the following snaps for complete examples of how to use sommelier-core.

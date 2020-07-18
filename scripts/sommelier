@@ -10,7 +10,7 @@ if [[ -n "${SOMMELIER_DEBUG:-}" ]]; then
   set -x
 fi
 
-if [[ "$SNAP_ARCH" != "amd64" ]]; then
+if [[ "$SNAP_ARCH" != "amd64" && "$SNAP_ARCH" != "i386" ]]; then
   echo "ERROR: Host architecture ($SNAP_ARCH) unsupported."
   exit 1
 fi
@@ -62,7 +62,7 @@ element_in() {
 init_wine() {
   echo "Initialising Wine.."
 
-  if [[  "${WINEARCH:-}" != "win32"  ]] && grep "arch=win32" "$WINEPREFIX/system.reg" >/dev/null 2>&1 ; then
+  if [[  "${WINEARCH:-}" != "win32" && "${SNAP_ARCH}" == "amd64" ]] && grep "arch=win32" "$WINEPREFIX/system.reg" >/dev/null 2>&1 ; then
       echo "WARNING: Old Wine prefix is win32, but WINEARCH is not 'win32'. Backing up old Wine prefix and generating a win64 one."
       mv "$WINEPREFIX" "${WINEPREFIX}.bak-$(date +%s)"
   fi
@@ -405,6 +405,10 @@ elif [[ "$ACTION" = "run-exe" ]]; then
   if [[ -z "${RUN_EXE:-}" ]]; then
     echo "ERROR: No executable provided. Please provide the path to the executable using the RUN_EXE environment variable."
     exit 1
+  fi
+
+  if [[ "$SNAP_ARCH" == "i386" ]]; then
+    RUN_EXE="${RUN_EXE/Program Files (x86)/Program Files}"  
   fi
 
   # Convert Windows path to unix
