@@ -113,7 +113,7 @@ install_app() {
   # Install additional requirements via winetricks
   if [[ -n "${TRICKS:-}" ]]; then
     for TRICK in ${TRICKS}; do
-      "${WINETRICKS}" --unattended prefix="$WINEPREFIX" "${TRICK}" | \
+      "${WINETRICKS}" --unattended "${TRICK}" | \
       yad --progress --title="Installing ${TRICK}" --progress-text= --width=400 --center --no-buttons --auto-close --auto-kill --on-top --pulsate
     done
   fi
