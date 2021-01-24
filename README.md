@@ -17,6 +17,65 @@ Pros:
 
 ## How to use
 
+### Step by step
+
+1. Add the following `part` to your `snapcraft.yaml`:
+    ```yaml
+    parts:
+      sommelier-core:
+        plugin: make
+        source: https://github.com/snapcrafters/sommelier-core.git
+        source-branch: "1.0"
+    ```
+1. Add the following `plug` definitions:
+    ```yaml
+    plugs:
+      wine-runtime:
+        interface: content
+        target: $SNAP/wine-runtime
+        default-provider: wine-platform-runtime
+      wine-5-stable: # number must match the number in default-provider
+        interface: content
+        target: $SNAP/wine-platform
+        default-provider: wine-platform-5-stable # must be a valid snap
+    ```
+    - WINE version snaps are named `wine-platform-[version]-[branch]` where:
+      - Version is one of `4`, `5`, or `6`
+        - And branch is one of `stable`, `staging`, or `devel`
+      - Or, version is `3` and branch is `stable`
+    - There is only one WINE runtime snap, which is named `wine-platform-runtime`.
+1. Add the following `apps`:
+    ```yaml
+    apps:
+      my-windows-app:
+        extensions: [gnome-3-28]
+        command: bin/sommelier run-exe
+        environment:
+          RUN_EXE: C:\path\to\installed\executable.exe
+          INSTALL_URL: http://example.com/installer.exe
+          INSTALL_FLAGS: /silent # optional commandline flags to pass to the installer
+        plugs: # change these as required
+        - home
+        - network
+        - network-bind
+        - removable-media
+      wine:
+        extensions: [gnome-3-28]
+        command: bin/sommelier
+        plugs:
+          - home
+          - network
+      winetricks:
+        extensions: [gnome-3-28]
+        command: bin/sommelier winetricks
+        plugs:
+          - home
+          - network
+    ```
+
+
+### Example Snaps
+
 See the following snaps for complete examples of how to use sommelier-core.
 
 * [PhotoScape snap](https://github.com/snapcrafters/photoscape)
