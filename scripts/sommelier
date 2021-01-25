@@ -396,9 +396,9 @@ fi
 if [[ "$ACTION" = "winetricks" ]]; then
   "$WINETRICKS" "${ACTION_ARGS[@]}"
 elif [[ "$ACTION" = "winedbg" ]]; then
-  "$ACTION" "${ACTION_ARGS[@]}"  
+  "$ACTION" "${ACTION_ARGS[@]}"
 elif [[ "$ACTION" = "run-exe" ]]; then
-  # Check if we know which executable to run. 
+  # Check if we know which executable to run.
   # Note: RUN_EXE is provided as an environment variable instead of a CLI
   # parameter so that snaps using command-chain can specify an executable
   # with a space in the path without having to use a wrapper script.
@@ -408,7 +408,7 @@ elif [[ "$ACTION" = "run-exe" ]]; then
   fi
 
   if [[ "$SNAP_ARCH" == "i386" ]]; then
-    RUN_EXE="${RUN_EXE/Program Files (x86)/Program Files}"  
+    RUN_EXE="${RUN_EXE/Program Files (x86)/Program Files}"
   fi
 
   # Convert Windows path to unix
