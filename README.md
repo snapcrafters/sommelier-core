@@ -11,7 +11,7 @@ Pros:
 * Includes the "Modern" theme from [ReactOS](https://reactos.org/) so Windows applications look less ugly.
 * Updates the Wine prefix every time Wine changes. Can upgrade a 32-bit Wine prefix to 64-bit.
 * Reinstalls the Windows app every time the snap `version` changes.
-* Reconfigures Wine every time the snap `revision` or the Wine version changes.  
+* Reconfigures Wine every time the snap `revision` or the Wine version changes.
 * Users can run `myapp.wine` to run arbitrary applications inside this snap.
 * Users can run `myapp.winetricks` to modify the Wine environment.
 
@@ -82,15 +82,15 @@ See the following snaps for complete examples of how to use sommelier-core.
 * [Bridge Designer snap](https://github.com/snapcrafters/bridge-designer)
 * [TrackMania Nations Forever snap](https://github.com/galgalesh/tmnationsforever)
 
-### General use
+### Variables
 
 * `TRICKS`: A space-separated list of [winetricks](https://wiki.winehq.org/Winetricks) to run before installing the application. For example, the trick `dxvk` installs and configures the Vulkan-based translation layer for Direct3D 9/10/11. If you're not sure which tricks your application needs, take a look at the test results on [Wine AppDB](https://appdb.winehq.org/) or the [Lutris](https://lutris.net/games) install scripts. Those often mention the required tricks.
-  
+
   > Note: You can experiment with different tricks yourself by building and installing your snap, and then running `myapp.winetricks` to install additional tricks. After that, run `myapp` again and see if everything works.
 
    Run `myapp.winetricks list-all` to see all available tricks. [Wine errors](https://wiki.winehq.org/Debug_Channels) can help you figure out which tricks are needed. Run `export WINEDEBUG=err+all` before running your snap to see them.
 * `INSTALL_URL`: URL to publicly available installer. Sommelier will download this installer and execute it in Wine.
-  
+
   > Note: if the installer is not publicly downloadable, you can alternatively include the installer in the snap and use the `INSTALL_EXE` environment variable to specify the absolute path to the installation exe. Using `INSTALL_URL` is preferred, however, because many installers have licenses that prevent third-party distribution. Example: `INSTALL_PATH: "$SNAP/PhotoScapeSetup_V3.7.exe"`
 * `INSTALL_FLAGS`: Windows-style CLI flags to pass to the installer. Many installers have CLI flags for silent installation, for example.
 
@@ -104,7 +104,7 @@ See the following snaps for complete examples of how to use sommelier-core.
 
 ## Compatibility
 
-This repository uses branches for stable and backwards-compatible releases. For example, all updates to the "1.0" branch of this repository will be backwards compatible. Set the `source-branch` propertie of the `sommelier` part in your `snapcraft.yaml` file to use a stable version.
+This repository uses branches for stable and backwards-compatible releases. For example, all updates to the "1.0" branch of this repository will be backwards compatible. Set the `source-branch` property of the `sommelier` part in your `snapcraft.yaml` file to use a stable version.
 
 ```yaml
 parts:
@@ -114,7 +114,7 @@ parts:
     source-branch: "1.0"
 ```
 
-### Development and debugging
+### Development and debugging variables
 
 * `SOMMELIER_DEBUG`: Enable bash tracing for the sommelier script and time how long sommelier runs before starting the application.
 * `SOMMELIER_STRICT`: Make sommelier exit when an unset variable is used. This might be useful to find bugs in sommelier.
