@@ -34,8 +34,8 @@ install:
 	install -D -m644 config/noto-sans-cjk-sc-regular.reg "$(DESTDIR)"/sommelier/config/noto-sans-cjk-sc-regular.reg
 
 	# Themes
-	install -D -m644 themes/modern/modern.msstyles "$(DESTDIR)"/sommelier/themes/modern/modern.msstyles
-	install -D -m644 themes/modern/modern.reg "$(DESTDIR)"/sommelier/themes/modern/modern.reg
+	install -D -m644 themes/lunar/lunar.msstyles "$(DESTDIR)"/sommelier/themes/lunar/lunar.msstyles
+	install -D -m644 themes/lunar/lunar.reg "$(DESTDIR)"/sommelier/themes/lunar/lunar.reg
 
 	# bindtextdomain patch
 ifeq ($(HW_PLATFORM), x86_64)
