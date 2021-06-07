@@ -92,6 +92,9 @@ init_wine() {
   if (locale | grep -e 'LANG=zh_CN' -e 'LANG=zh_SG') >/dev/null 2>&1; then
     "$WINELOADER" regedit "$SNAP/sommelier/config/noto-sans-cjk-sc.reg"
     sleep 1
+  elif (locale | grep 'LANG=zh_HK') >/dev/null 2>&1; then
+    "$WINELOADER" regedit "$SNAP/sommelier/config/noto-sans-cjk-hk.reg"
+    sleep 1
   elif (locale | grep -e 'LANG=zh_MO' -e 'LANG=zh_TW') >/dev/null 2>&1; then
     "$WINELOADER" regedit "$SNAP/sommelier/config/noto-sans-cjk-tc.reg"
     sleep 1
