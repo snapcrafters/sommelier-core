@@ -1,0 +1,4 @@
+Windows Registry Editor Version 5.00
+[HKEY_LOCAL_MACHINE\Software\Microsoft\Windows NT\CurrentVersion\FontSubstitutes]
+"MS Shell Dlg"="Noto Sans CJK JP"
+"Tms Rmn"="Noto Sans CJK JP"
