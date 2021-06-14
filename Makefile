@@ -29,9 +29,12 @@ install:
 	install -d "$(DESTDIR)"/wine-runtime
 	install -d "$(DESTDIR)"/wine-platform
 
-	# Chinese languages config
-	install -D -m644 config/noto-sans-cjk-tc-regular.reg "$(DESTDIR)"/sommelier/config/noto-sans-cjk-tc-regular.reg
-	install -D -m644 config/noto-sans-cjk-sc-regular.reg "$(DESTDIR)"/sommelier/config/noto-sans-cjk-sc-regular.reg
+	# cjk languages config
+	install -D -m644 config/noto-sans-cjk-jp.reg "$(DESTDIR)"/sommelier/config/noto-sans-cjk-jp.reg
+	install -D -m644 config/noto-sans-cjk-kr.reg "$(DESTDIR)"/sommelier/config/noto-sans-cjk-kr.reg
+	install -D -m644 config/noto-sans-cjk-tc.reg "$(DESTDIR)"/sommelier/config/noto-sans-cjk-tc.reg
+	install -D -m644 config/noto-sans-cjk-hk.reg "$(DESTDIR)"/sommelier/config/noto-sans-cjk-hk.reg
+	install -D -m644 config/noto-sans-cjk-sc.reg "$(DESTDIR)"/sommelier/config/noto-sans-cjk-sc.reg
 
 	# Themes
 	install -D -m644 themes/modern/modern.msstyles "$(DESTDIR)"/sommelier/themes/modern/modern.msstyles
