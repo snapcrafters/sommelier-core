@@ -81,10 +81,10 @@ init_wine() {
   find /usr/share/fonts/ -type f \( -name "*.ttf" -o -name "*.ttc" \) -exec ln -vs "{}" "$WINEPREFIX/drive_c/windows/Fonts/" \; &>/dev/null
 
   if [[ -z "${SOMMELIER_NO_THEME:-}" ]]; then
-    # Install the ReactOS Modern theme and set as default
-    ensure_dir_exists "$WINEPREFIX/drive_c/windows/Resources/Themes/modern"
+    # Install Zhiyi's light theme and set as default
+    ensure_dir_exists "$WINEPREFIX/drive_c/windows/Resources/Themes/light"
     cp -r "$SNAP/sommelier/themes/"* "$WINEPREFIX/drive_c/windows/Resources/Themes"
-    "$WINELOADER" regedit "$SNAP/sommelier/themes/modern/modern.reg"
+    "$WINELOADER" regedit "$SNAP/sommelier/themes/light/light.reg"
     sleep 1
   fi
 

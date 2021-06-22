@@ -8,7 +8,7 @@ Pros:
 
 * Uses Wine from the wine-platform snaps to reduce the size of your snap.
 * Uses the `gnome-3-28` extension for initializing all the generic desktop stuff.
-* Includes the "Modern" theme from [ReactOS](https://reactos.org/) so Windows applications look less ugly.
+* Includes the "Light" theme from [Zhiyi Zhang](https://www.winehq.org/pipermail/wine-devel/2021-June/188444.html) so Windows applications look less ugly.
 * Updates the Wine prefix every time Wine changes. Can upgrade a 32-bit Wine prefix to 64-bit.
 * Reinstalls the Windows app every time the snap `version` changes.
 * Reconfigures Wine every time the snap `revision` or the Wine version changes.
@@ -99,7 +99,7 @@ See the following snaps for complete examples of how to use sommelier-core.
 * `WINEDLLOVERRIDES`: Override DLL loading behavior: configure Wine to choose between native and builtin DLLs. See [DLL Overrides](https://wiki.winehq.org/Wine_User%27s_Guide#DLL_Overrides) and [WINEDLLOVERRIDES](https://wiki.winehq.org/Wine_User%27s_Guide#WINEDLLOVERRIDES.3DDLL_Overrides) docs for more information. Example: `"mscoree,mshtml="`
 * `WINEESYNC`: set to `1` to enable esync. This can increase performance for some games, especially ones that rely heavily on the CPU. See [esync docs](https://github.com/zfigura/wine/blob/esync/README.esync) for more information.
 * `WINEARCH`: Wine will start an 64-bit environment by default. This runs both 32-bit and 64-bit Windows binaries. Some 32-bit applications, however, have issues when you run them in 64-bit Wine. For these applications, set `WINEARCH` to `win32` to use a 32-bit-only environment.
-* `SOMMELIER_NO_THEME`: Use this variable to disable the ReactOS Modern theme. Some Java 1.6 applications crash when you apply a theme.
+* `SOMMELIER_NO_THEME`: Use this variable to disable the theme. Some Java 1.6 applications crash when you apply a theme.
 * `SOMMELIER_KEEP_CWD`: Use this variable when sommelier should not change the working directory before executing the app. This is useful if your app can take filenames as arguments and you want relative filenames to work. Note: some Windows apps only work when the working directory is their application directory.
 
 ## Compatibility
@@ -121,5 +121,5 @@ parts:
 
 ## License
 
-* The ReactOS Modern theme is released under the GNU General Public License v3.0 with the [ReactOS License Binary Linking Exception](https://reactos.org/intellectual-property-guideline/).
+* The Light theme is released under the GNU Lesser General Public License 2.1+.
 * All other content is released under the MIT license.
