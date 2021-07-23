@@ -80,7 +80,7 @@ See the following snaps for complete examples of how to use sommelier-core.
 
 * [PhotoScape snap](https://github.com/snapcrafters/photoscape)
 * [Bridge Designer snap](https://github.com/snapcrafters/bridge-designer)
-* [TrackMania Nations Forever snap](https://github.com/galgalesh/tmnationsforever)
+* [TrackMania Nations Forever snap](https://github.com/snapcrafters/tmnationsforever)
 
 ### Variables
 
