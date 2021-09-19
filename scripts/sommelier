@@ -217,6 +217,18 @@ start_app() {
     fi
     "${WINELOADER}" explorer /desktop="virtual","${native_res}" "${app}" "${ACTION_ARGS[@]}"
     local exit_code="$?"
+  elif [[ -f "${ACTION_ARGS}" ]]; then
+    # Passing args to wine apps
+    for i in "${ACTION_ARGS[@]}"; do
+        # Add path in Wine form (e.g. "z:/home/user/Desktop/lol.xyz")
+        if [[ -f /${i#?:} ]]; then 
+            args+=("z:${i#?:}")   # When opened through .desktop or Wine path (e.g. z:/*)
+        elif [[ "${i:0:1}" = "-" ]]; then
+            args+=("${i/#-//}")
+        fi
+    done
+    "${WINELOADER}" "${app}" "${args[@]}"
+    local exit_code="$?"
   else
     "${WINELOADER}" "${app}" "${ACTION_ARGS[@]}"
     local exit_code="$?"
