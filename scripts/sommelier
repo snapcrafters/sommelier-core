@@ -184,9 +184,9 @@ start_app() {
   fi
 
   if [[ -e "${ACTION_ARGS}" ]]; then
-    # When opened through .desktop or Wine path (e.g. Z:/*)
+    # Convert Unix paths to Windows paths.
     for i in "${ACTION_ARGS[@]}"; do
-      args+=("Z:${i#?:}")
+      args+=( "$(winepath -w "$i")" )
     done
     APP_ARGS=( "${args[@]}" )
   else
