@@ -183,9 +183,19 @@ start_app() {
     . "$SNAP/sommelier/hooks/pre-start"
   fi
 
+  if [[ -e "${ACTION_ARGS}" ]]; then
+    # When opened through .desktop or Wine path (e.g. Z:/*)
+    for i in "${ACTION_ARGS[@]}"; do
+      args+=("Z:${i#?:}")
+    done
+    APP_ARGS=( "${args[@]}" )
+  else
+    APP_ARGS=( "${ACTION_ARGS[@]}" )
+  fi
+
   if [[ -n "${SOMMELIER_DEBUG:-}" ]]; then
     echo "DEBUG: Sommelier elapsed time: $(date +%s.%N --date="$START seconds ago")"
-    echo "DEBUG: Now running: '${WINELOADER}' '${RUN_EXE}' '${ACTION_ARGS[@]}'"
+    echo "DEBUG: Now running: '${WINELOADER}' '${RUN_EXE}' '${APP_ARGS[@]}'"
   fi
 
   # Because Windows software will often look for program files in the location
@@ -215,22 +225,10 @@ start_app() {
       # instead.
       native_res=$(xrandr -q | grep XWAYLAND | cut -d' ' -f3 | cut -d'+' -f1 | sort -r -n | sort -r -n | head -n 1)
     fi
-    "${WINELOADER}" explorer /desktop="virtual","${native_res}" "${app}" "${ACTION_ARGS[@]}"
-    local exit_code="$?"
-  elif [[ -f "${ACTION_ARGS}" ]]; then
-    # Passing args to wine apps
-    for i in "${ACTION_ARGS[@]}"; do
-        # Add path in Wine form (e.g. "z:/home/user/Desktop/lol.xyz")
-        if [[ -f /${i#?:} ]]; then 
-            args+=("z:${i#?:}")   # When opened through .desktop or Wine path (e.g. z:/*)
-        elif [[ "${i:0:1}" = "-" ]]; then
-            args+=("${i/#-//}")
-        fi
-    done
-    "${WINELOADER}" "${app}" "${args[@]}"
+    "${WINELOADER}" explorer /desktop="virtual","${native_res}" "${app}" "${APP_ARGS[@]}"
     local exit_code="$?"
   else
-    "${WINELOADER}" "${app}" "${ACTION_ARGS[@]}"
+    "${WINELOADER}" "${app}" "${APP_ARGS[@]}"
     local exit_code="$?"
   fi
 
