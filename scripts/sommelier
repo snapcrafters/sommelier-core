@@ -186,16 +186,16 @@ start_app() {
   if [[ -e "${ACTION_ARGS}" ]]; then
     # Convert Unix paths to Windows paths.
     for i in "${ACTION_ARGS[@]}"; do
+      if [[ -e "${i}" ]]; then 
       args+=( "$(winepath -w "$i")" )
+      fi
     done
-    APP_ARGS=( "${args[@]}" )
-  else
-    APP_ARGS=( "${ACTION_ARGS[@]}" )
+    ACTION_ARGS=( "${args[@]}" )
   fi
 
   if [[ -n "${SOMMELIER_DEBUG:-}" ]]; then
     echo "DEBUG: Sommelier elapsed time: $(date +%s.%N --date="$START seconds ago")"
-    echo "DEBUG: Now running: '${WINELOADER}' '${RUN_EXE}' '${APP_ARGS[@]}'"
+    echo "DEBUG: Now running: '${WINELOADER}' '${RUN_EXE}' '${ACTION_ARGS[@]}'"
   fi
 
   # Because Windows software will often look for program files in the location
@@ -225,10 +225,10 @@ start_app() {
       # instead.
       native_res=$(xrandr -q | grep XWAYLAND | cut -d' ' -f3 | cut -d'+' -f1 | sort -r -n | sort -r -n | head -n 1)
     fi
-    "${WINELOADER}" explorer /desktop="virtual","${native_res}" "${app}" "${APP_ARGS[@]}"
+    "${WINELOADER}" explorer /desktop="virtual","${native_res}" "${app}" "${ACTION_ARGS[@]}"
     local exit_code="$?"
   else
-    "${WINELOADER}" "${app}" "${APP_ARGS[@]}"
+    "${WINELOADER}" "${app}" "${ACTION_ARGS[@]}"
     local exit_code="$?"
   fi
 
