@@ -191,6 +191,15 @@ start_app() {
       fi
     done
     ACTION_ARGS=( "${args[@]}" )
+  elif [[ "$ACTION_ARGS" == "/add" ]] && [[ "$(basename $RUN_EXE)" == "foobar2000.exe" ]]; then
+    # Convert Unix paths to Windows paths.
+    # Skips first arg /add in loop.
+    for i in "${ACTION_ARGS[@]:1}"; do
+      if [[ -e "${i}" ]]; then
+      args+=( "$(winepath -w "$i")" )
+      fi
+    done
+    ACTION_ARGS=( "/add" "${args[@]}" )
   fi
 
   if [[ -n "${SOMMELIER_DEBUG:-}" ]]; then
