@@ -183,6 +183,16 @@ start_app() {
     . "$SNAP/sommelier/hooks/pre-start"
   fi
 
+  # Convert all arguments which point to existing files/dirs to Windows paths.
+  for i in "${ACTION_ARGS[@]}"; do
+    if [[ -e "${i}" ]]; then
+      args+=( "$(winepath -w "$i")" )
+    else
+      args+=( "$i" )
+    fi
+  done
+  ACTION_ARGS=( "${args[@]}" )
+
   if [[ -n "${SOMMELIER_DEBUG:-}" ]]; then
     echo "DEBUG: Sommelier elapsed time: $(date +%s.%N --date="$START seconds ago")"
     echo "DEBUG: Now running: '${WINELOADER}' '${RUN_EXE}' '${ACTION_ARGS[@]}'"
