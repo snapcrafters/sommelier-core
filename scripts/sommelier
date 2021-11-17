@@ -151,8 +151,7 @@ install_app() {
     EXE_NAME=$(basename "${LOCAL_INSTALL_EXE}")
     yes | yad --progress --title="Installing ${EXE_NAME}" --progress-text= --width=400 --center --no-buttons --auto-close --auto-kill --on-top --pulsate &
     INSTALL_YAD_PID="$!"
-    FILE_NAME="${LOCAL_INSTALL_EXE##*/}"
-    FILE_END="${FILE_NAME##*.}"
+    FILE_END="${EXE_NAME##*.}"
     FILE_TYPE="${FILE_END,,}" # force lowercase
     if [[ "$FILE_TYPE" == 'exe' ]]; then
         "${WINELOADER}" "${LOCAL_INSTALL_EXE}" "${ARR_INSTALL_FLAGS[@]}"
