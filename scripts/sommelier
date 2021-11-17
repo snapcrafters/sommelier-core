@@ -151,7 +151,18 @@ install_app() {
     EXE_NAME=$(basename "${LOCAL_INSTALL_EXE}")
     yes | yad --progress --title="Installing ${EXE_NAME}" --progress-text= --width=400 --center --no-buttons --auto-close --auto-kill --on-top --pulsate &
     INSTALL_YAD_PID="$!"
-    "${WINELOADER}" "${LOCAL_INSTALL_EXE}" "${ARR_INSTALL_FLAGS[@]}"
+    FILE_NAME="${LOCAL_INSTALL_EXE##*/}"
+    FILE_END="${FILE_NAME##*.}"
+    FILE_TYPE="${FILE_END,,}" # force lowercase
+    if [[ "$FILE_TYPE" == 'exe' ]]; then
+        "${WINELOADER}" "${LOCAL_INSTALL_EXE}" "${ARR_INSTALL_FLAGS[@]}"
+    elif [[ "$FILE_TYPE" == 'msi' ]]; then
+        "${MSIEXEC}" /i "${LOCAL_INSTALL_EXE}" "${ARR_INSTALL_FLAGS[@]}"
+    else
+        echo "ERROR: Unsupported file type: $FILE_TYPE"
+        kill "$INSTALL_YAD_PID"
+        exit 1
+    fi
     kill "$INSTALL_YAD_PID"
   fi
 
@@ -298,6 +309,7 @@ append_dir PATH "$WINE_PLATFORM/bin"
 # Note: We don't need to manually specify WINEDLLPATH, `wine` can find them on
 #       its own.
 export WINELOADER="$WINE_PLATFORM/bin/wine"
+export MSIEXEC="$WINE_PLATFORM/bin/msiexec"
 
 append_dir LD_LIBRARY_PATH "$WINE_PLATFORM/lib"
 append_dir LD_LIBRARY_PATH "$WINE_PLATFORM/lib64"
