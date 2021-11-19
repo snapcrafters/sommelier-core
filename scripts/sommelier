@@ -156,11 +156,10 @@ install_app() {
     if [[ "$FILE_TYPE" == 'exe' ]]; then
         "${WINELOADER}" "${LOCAL_INSTALL_EXE}" "${ARR_INSTALL_FLAGS[@]}"
     elif [[ "$FILE_TYPE" == 'msi' ]]; then
-        "${MSIEXEC}" /i "${LOCAL_INSTALL_EXE}" "${ARR_INSTALL_FLAGS[@]}"
+        "${WINELOADER}" msiexec /i "${LOCAL_INSTALL_EXE}" "${ARR_INSTALL_FLAGS[@]}"
     else
-        echo "ERROR: Unsupported file type: $FILE_TYPE"
-        kill "$INSTALL_YAD_PID"
-        exit 1
+        echo "WARNING: Unsupported file type: $FILE_TYPE. This feature is deprecated, please contact the sommelier-core devs for more info."
+        "${WINELOADER}" "${LOCAL_INSTALL_EXE}" "${ARR_INSTALL_FLAGS[@]}"
     fi
     kill "$INSTALL_YAD_PID"
   fi
@@ -308,7 +307,6 @@ append_dir PATH "$WINE_PLATFORM/bin"
 # Note: We don't need to manually specify WINEDLLPATH, `wine` can find them on
 #       its own.
 export WINELOADER="$WINE_PLATFORM/bin/wine"
-export MSIEXEC="$WINE_PLATFORM/bin/msiexec"
 
 append_dir LD_LIBRARY_PATH "$WINE_PLATFORM/lib"
 append_dir LD_LIBRARY_PATH "$WINE_PLATFORM/lib64"
