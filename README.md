@@ -87,6 +87,8 @@ See the following snaps for complete examples of how to use sommelier-core.
 * [XNote Stopwatch snap](https://github.com/brlin-tw/xnote-stopwatch-snap)  
   Portable application, non re-distributable executable fetched during snap
   runtime
+* [GRC's DNS Benchmark snap](https://github.com/brlin-tw/dnsbench-snap)  
+  Portable application, re-distributable executable fetched during snap buildtime
 
 ### Variables
 
