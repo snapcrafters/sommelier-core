@@ -84,6 +84,9 @@ See the following snaps for complete examples of how to use sommelier-core.
   Re-distributable installer bundled within packaging source
 * [TrackMania Nations Forever snap](https://github.com/snapcrafters/tmnationsforever)  
   Non re-distributable installer fetched during snap runtime
+* [XNote Stopwatch snap](https://github.com/brlin-tw/xnote-stopwatch-snap)  
+  Portable application, non re-distributable executable fetched during snap
+  runtime
 
 ### Variables
 
