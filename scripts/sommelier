@@ -298,6 +298,9 @@ if [[ ! -d "$WINE_PLATFORM" ]]; then
   fi
 fi
 
+# Fix for nvidia drivers on Ubuntu 21.10 and other very modern systems (part 1 of 2)
+export LD_LIBRARY_PATH="${LD_LIBRARY_PATH#$SNAP_LIBRARY_PATH:}"
+
 append_dir PATH "$WINE_PLATFORM/bin"
 
 # Note: Technically, we should be able to just use the `wine` command and get
@@ -402,6 +405,10 @@ export WINEDLLOVERRIDES="${WINEDLLOVERRIDES:-};winemenubuilder.exe=d"
 if [[ ! -f "${WINEPREFIX}/drive_c/windows/system.ini"  || "$(cat "$SNAP_USER_COMMON/.last_snap_revision" 2>/dev/null)" != "$SNAP_REVISION" ]]; then
   init_wine
 fi
+
+
+# Fix for nvidia drivers on Ubuntu 21.10 and other very modern systems (part 2 of 2)
+append_dir LD_LIBRARY_PATH "${SNAP_LIBRARY_PATH}"
 
 
 #####################################
