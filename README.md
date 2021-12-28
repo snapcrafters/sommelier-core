@@ -78,9 +78,12 @@ Pros:
 
 See the following snaps for complete examples of how to use sommelier-core.
 
-* [PhotoScape snap](https://github.com/snapcrafters/photoscape)
-* [Bridge Designer snap](https://github.com/snapcrafters/bridge-designer)
-* [TrackMania Nations Forever snap](https://github.com/snapcrafters/tmnationsforever)
+* [PhotoScape snap](https://github.com/snapcrafters/photoscape)  
+  Re-distributable installer bundled within packaging source
+* [Bridge Designer snap](https://github.com/snapcrafters/bridge-designer)  
+  Re-distributable installer bundled within packaging source
+* [TrackMania Nations Forever snap](https://github.com/snapcrafters/tmnationsforever)  
+  Non re-distributable installer fetched during snap runtime
 
 ### Variables
 
