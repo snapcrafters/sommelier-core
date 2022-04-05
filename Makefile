@@ -15,7 +15,7 @@ ifeq ($(HW_PLATFORM), x86_64)
 	sudo apt-get -y install libc6-dev-i386
 	sudo apt-get -y install gcc-multilib
 	mkdir -p $(ARCH_32)
-	gcc -m32 -Wall -O2 -o $(ARCH_32)/$(BINDTEXTDOMAIN) -fPIC -shared /snap/snapcraft/current/share/snapcraft/extensions/desktop/src/bindtextdomain.c -ldl
+	/usr/bin/gcc -m32 -Wall -O2 -o $(ARCH_32)/$(BINDTEXTDOMAIN) -fPIC -shared /snap/snapcraft/current/share/snapcraft/extensions/desktop/src/bindtextdomain.c -ldl
 endif
 
 clean:
