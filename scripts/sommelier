@@ -62,9 +62,14 @@ element_in() {
 init_wine() {
   echo "Initialising Wine.."
 
-  if [[  "${WINEARCH:-}" != "win32" && "${SNAP_ARCH}" == "amd64" ]] && grep "arch=win32" "$WINEPREFIX/system.reg" >/dev/null 2>&1 ; then
-      echo "WARNING: Old Wine prefix is win32, but WINEARCH is not 'win32'. Backing up old Wine prefix and generating a win64 one."
-      mv "$WINEPREFIX" "${WINEPREFIX}.bak-$(date +%s)"
+  if [[ -n "${WINEARCH:-}" ]]; then
+    if [[  "${WINEARCH:-}" != "win32" && "${SNAP_ARCH}" == "amd64" ]] && grep "arch=win32" "$WINEPREFIX/system.reg" >/dev/null 2>&1 ; then
+        echo "WARNING: Old Wine prefix is win32, but WINEARCH is not 'win32'. Backing up old Wine prefix and generating a win64 one."
+        mv "$WINEPREFIX" "${WINEPREFIX}.bak-$(date +%s)"
+    elif [[ "${WINEARCH:-}" != "win64" && "${SNAP_ARCH}" == "amd64" ]] && grep "arch=win64" "$WINEPREFIX/system.reg" >/dev/null 2>&1 ; then
+        echo "WARNING: Old Wine prefix is win64, but WINEARCH is not 'win64'. Backing up old Wine prefix and generating a win32 one."
+        mv "$WINEPREFIX" "${WINEPREFIX}.bak-$(date +%s)"
+    fi
   fi
 
   # Create the Wineprefix
