@@ -12,8 +12,12 @@ build:
 	#
 	# The Gnome extensions only compile the library for 64-bit arch. 
 ifeq ($(HW_PLATFORM), x86_64)
-	sudo apt-get -y install libc6-dev-i386
-	sudo apt-get -y install gcc-multilib
+	if ! dpkg -l libc6-dev-i386; then
+	  apt-get -y install libc6-dev-i386
+	fi
+	if ! dpkg -l gcc-multilib; then
+	  apt-get -y install gcc-multilib
+	fi
 	mkdir -p $(ARCH_32)
 	/usr/bin/gcc -m32 -Wall -O2 -o $(ARCH_32)/$(BINDTEXTDOMAIN) -fPIC -shared /snap/snapcraft/current/share/snapcraft/extensions/desktop/src/bindtextdomain.c -ldl
 endif
