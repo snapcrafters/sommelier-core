@@ -285,12 +285,22 @@ if [[ ! -d "$WINE_PLATFORM" ]]; then
       || true
   )"
 
+  platform_snap_plug_name="$(
+    grep \
+      --extended-regexp \
+      '*wine-[[:digit:]]' \
+      $SNAP/meta/snap.yaml \
+      | cut --delimiter=: --fields=1 \
+      | sed 's/  //' \
+      || true
+  )"
+
   if test -n "${platform_snap_name:-}"; then
     echo "ERROR: You need to connect this snap to the wine platform snap."
     echo ""
     echo "You can do this with those commands:"
     echo "snap install ${platform_snap_name}"
-    echo "snap connect $SNAP_NAME:$(echo $platform_snap_name | sed 's|-platform||g') ${platform_snap_name}"
+    echo "snap connect $SNAP_NAME:${platform_snap_plug_name} ${platform_snap_name}"
     echo ""
     exit 1
   else
@@ -336,12 +346,22 @@ if [[ ! -f "$WINE_PLATFORM_RUNTIME/bin/wprfile" ]]; then
       || true
   )"
 
+  runtime_snap_plug_name="$(
+    grep \
+      --extended-regexp \
+      '  wine-runtime' \
+      $SNAP/meta/snap.yaml \
+      | cut --delimiter=: --fields=1 \
+      | sed 's/  //' \
+      || true
+  )"
+
   if test -n "${runtime_snap_name:-}"; then
     echo "ERROR: You need to connect this snap to the wine runtime snap."
     echo ""
     echo "You can do this with those commands:"
     echo "snap install ${runtime_snap_name}"
-    echo "snap connect $SNAP_NAME:$(echo $runtime_snap_name | sed 's|-platform||g') ${runtime_snap_name}"
+    echo "snap connect $SNAP_NAME:${runtime_snap_plug_name} ${runtime_snap_name}"
     echo ""
     exit 1
   else
