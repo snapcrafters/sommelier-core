@@ -87,8 +87,8 @@ init_wine() {
 
   if [[ -z "${SOMMELIER_NO_THEME:-}" ]]; then
     # Install Zhiyi's light theme and set as default
-    ensure_dir_exists "$WINEPREFIX/drive_c/windows/Resources/Themes/light"
-    cp -r "$SNAP/sommelier/themes/"* "$WINEPREFIX/drive_c/windows/Resources/Themes"
+    ensure_dir_exists "$WINEPREFIX/drive_c/windows/resources/themes/light"
+    cp -r "$SNAP/sommelier/themes/"* "$WINEPREFIX/drive_c/windows/resources/themes"
     "$WINELOADER" regedit "$SNAP/sommelier/themes/light/light.reg"
     sleep 1
   fi
