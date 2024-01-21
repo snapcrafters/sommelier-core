@@ -60,6 +60,12 @@ element_in() {
 #######################
 
 init_wine() {
+  # Run pre-init hook
+  if [[ -f "$SNAP/sommelier/hooks/pre-init" ]]; then
+    echo "Running hook '$SNAP/sommelier/hooks/pre-init'"
+    . "$SNAP/sommelier/hooks/pre-init"
+  fi
+
   echo "Initialising Wine.."
 
   if [[ -n "${WINEARCH:-}" ]]; then
