@@ -107,7 +107,7 @@ See the following snaps for complete examples of how to use sommelier-core.
 * `WINEDLLOVERRIDES`: Override DLL loading behavior: configure Wine to choose between native and builtin DLLs. See [DLL Overrides](https://wiki.winehq.org/Wine_User%27s_Guide#DLL_Overrides) and [WINEDLLOVERRIDES](https://wiki.winehq.org/Wine_User%27s_Guide#WINEDLLOVERRIDES.3DDLL_Overrides) docs for more information. Example: `"mscoree,mshtml="`
 * `WINEESYNC`: set to `1` to enable esync. This can increase performance for some games, especially ones that rely heavily on the CPU. See [esync docs](https://github.com/zfigura/wine/blob/esync/README.esync) for more information.
 * `WINEARCH`: Wine will start an 64-bit environment by default. This runs both 32-bit and 64-bit Windows binaries. Some 32-bit applications, however, have issues when you run them in 64-bit Wine. For these applications, set `WINEARCH` to `win32` to use a 32-bit-only environment.
-* `SOMMELIER_NO_THEME`: Use this variable to disable the theme. Some Java 1.6 applications crash when you apply a theme.
+* `SOMMELIER_NO_THEME`: Use this variable to disable the theme. Some Java 1.6 applications crash when you apply a theme. This should be added with value `1` in consumer snaps that are using WINE `9.x` and above.
 * `SOMMELIER_KEEP_CWD`: Use this variable when sommelier should not change the working directory before executing the app. This is useful if your app can take filenames as arguments and you want relative filenames to work. Note: some Windows apps only work when the working directory is their application directory.
 
 ## Compatibility

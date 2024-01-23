@@ -4,6 +4,7 @@ LIB_DIR	     := $(DESTDIR)/lib
 BINDTEXTDOMAIN  := bindtextdomain.so
 HW_PLATFORM     := $(shell uname --hardware-platform)
 ARCH_32         := i386-linux-gnu
+SM_NO_THEME     := $(shell grep SOMMELIER_NO_THEME ${SNAPCRAFT_PROJECT_DIR}/snap/snapcraft.yaml | cut -d':' -f2 | sed 's/^ *//' || true)
 
 build:
 	# Build the 32-bit version of the bindtextdomain patch. This patch
@@ -37,8 +38,10 @@ install:
 	install -D -m644 config/noto-sans-cjk-sc.reg "$(DESTDIR)"/sommelier/config/noto-sans-cjk-sc.reg
 
 	# Themes
+ifeq ($(SM_NO_THEME), 0)
 	install -D -m644 themes/light/light.msstyles "$(DESTDIR)"/sommelier/themes/light/light.msstyles
 	install -D -m644 themes/light/light.reg "$(DESTDIR)"/sommelier/themes/light/light.reg
+endif
 
 	# bindtextdomain patch
 ifeq ($(HW_PLATFORM), x86_64)
