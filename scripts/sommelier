@@ -78,6 +78,51 @@ init_wine() {
     fi
   fi
 
+  if [[ -n "${SOMMELIER_INSTALL_MONO:-}" ]]; then
+    if [[ $(grep -c -s -e mscor -e mono "$WINEPREFIX"/user.reg) -eq 0 ]]; then
+      WINE_VER=$(strings "$WINE_PLATFORM"/lib/libwine.so.1 "$WINE_PLATFORM"/lib/wine/ntdll.so "$WINE_PLATFORM"/lib/wine/i386-unix/ntdll.so 2>/dev/null | grep "wine-[\.0-9]" | cut -d "-" -f 2)
+      MONO_VER=$(wget "https://source.winehq.org/source/dlls/appwiz.cpl/addons.c?%21v=wine-${WINE_VER}" -qO- | grep -Po 'MONO_VERSION</a>.*[0-9]"' | cut -d'"' -f4)
+      if [[ $(ls "$SNAP"/wine-platform* | grep -c stable) -eq 1 ]]; then
+      # For future reference setting of MONO_VER see https://github.com/wine-mirror/wine/tree/stable of wine-stable
+      case "$WINE_VER" in
+      3.0.1|3.0.2|3.0.3|3.0.4|3.0.5)
+        MONO_VER="4.7.1"
+        ;;
+
+      4.0.1|4.0.2|4.0.3|4.0.4)
+        MONO_VER="4.7.5"
+        ;;
+
+      5.0.1|5.0.2|5.0.3|5.0.4|5.0.5)
+        MONO_VER="4.9.4"
+        ;;
+
+      6.0.1|6.0.2|6.0.3|6.0.4)
+        MONO_VER="5.1.1"
+        ;;
+
+      7.0.1|7.0.2|7.0.3|7.0.4)
+        MONO_VER="7.0.0-x86"
+        ;;
+      *)
+        MONO_VER="$MONO_VER-x86"
+        ;;
+      esac
+    fi
+      MONO_URL="https://dl.winehq.org/wine/wine-mono/$(cut -d'-' -f1 <<< ${MONO_VER})/wine-mono-${MONO_VER}.msi"
+      # If we've been given an installer URL derive the filename
+      MONO_MSI="$(basename "${MONO_URL//\?*/}")"
+      # Create wine cache dir
+      ensure_dir_exists "${XDG_CACHE_HOME}"/wine
+      # Download Wine Mono to cache
+      if [[ ! -f "${XDG_CACHE_HOME}/wine/${MONO_MSI}" ]]; then
+        wget "${MONO_URL}" -O "${XDG_CACHE_HOME}/wine/${MONO_MSI}" 2>&1 | \
+        perl -p -e '$| = 1; s/^.* +([0-9]+%) +([0-9,.]+[GMKB]) +([0-9hms,.]+).*$/\1\n# Downloading... \2 (\3)/' | \
+        yad --progress --title="Downloading ${MONO_MSI}" --width=400 --center --no-buttons --auto-close --auto-kill --on-top --no-escape
+      fi
+    fi
+  fi
+
   # Create the Wineprefix
   "${WINELOADER}" wineboot --init 2>&1 | \
   yad --progress --title="Preparing Windows compatibility layer" --progress-text= --width=400 --center --no-buttons --auto-close --auto-kill --pulsate
